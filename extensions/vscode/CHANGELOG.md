@@ -39,3 +39,6 @@ All notable changes to the mcpcheck VS Code extension.
 - **CodeLens** at the top of every linted MCP config file shows the
   issue count and surfaces `Fix all` / `Explain...` buttons inline, so
   commands are discoverable without the command palette.
+- **Status-bar item** — compact `mcpcheck: 3E 2W (4⚡)` pill for the
+  active file. Click runs Fix all. Background flips to error-red when
+  errors are present.

@@ -41,6 +41,39 @@ export function activate(context: vscode.ExtensionContext): void {
   const collection = vscode.languages.createDiagnosticCollection(DIAGNOSTIC_SOURCE);
   context.subscriptions.push(collection);
 
+  const status = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+  status.command = "mcpcheck.fixAll";
+  context.subscriptions.push(status);
+
+  const updateStatus = () => {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor || !isLintable(editor.document)) {
+      status.hide();
+      return;
+    }
+    const diags = vscode.languages
+      .getDiagnostics(editor.document.uri)
+      .filter((d) => d.source === DIAGNOSTIC_SOURCE);
+    if (diags.length === 0) {
+      status.text = "$(check) mcpcheck";
+      status.tooltip = "mcpcheck: no issues";
+      status.backgroundColor = undefined;
+    } else {
+      const errors = diags.filter((d) => d.severity === vscode.DiagnosticSeverity.Error).length;
+      const warnings = diags.filter((d) => d.severity === vscode.DiagnosticSeverity.Warning).length;
+      const fixable = diags.filter((d) => diagnosticIssues.get(d)?.fix).length;
+      const bits: string[] = [];
+      if (errors) bits.push(`${errors}E`);
+      if (warnings) bits.push(`${warnings}W`);
+      status.text = `$(alert) mcpcheck: ${bits.join(" ")}${fixable ? `  (${fixable}⚡)` : ""}`;
+      status.tooltip = `mcpcheck: ${errors} error(s), ${warnings} warning(s), ${fixable} autofixable. Click to fix all.`;
+      status.backgroundColor = errors
+        ? new vscode.ThemeColor("statusBarItem.errorBackground")
+        : new vscode.ThemeColor("statusBarItem.warningBackground");
+    }
+    status.show();
+  };
+
   const lintIfEligible = (doc: vscode.TextDocument) => {
     if (!isLintable(doc)) {
       collection.delete(doc.uri);
@@ -51,10 +84,13 @@ export function activate(context: vscode.ExtensionContext): void {
 
   // Initial pass over whatever's already open.
   for (const doc of vscode.workspace.textDocuments) lintIfEligible(doc);
+  updateStatus();
 
   context.subscriptions.push(
     vscode.workspace.onDidOpenTextDocument(lintIfEligible),
     vscode.workspace.onDidSaveTextDocument(lintIfEligible),
+    vscode.window.onDidChangeActiveTextEditor(updateStatus),
+    vscode.languages.onDidChangeDiagnostics(updateStatus),
     vscode.workspace.onDidCloseTextDocument((doc) => {
       collection.delete(doc.uri);
       const key = doc.uri.toString();

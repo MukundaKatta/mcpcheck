@@ -25,12 +25,15 @@ import { formatText } from "./formatters/text.js";
 import { formatJson } from "./formatters/json.js";
 import { formatSarif } from "./formatters/sarif.js";
 import { formatGithub } from "./formatters/github.js";
+import { formatMarkdown } from "./formatters/markdown.js";
+import { formatJunit } from "./formatters/junit.js";
 import { explainRule, listRuleIds } from "./rule-docs.js";
 import { runInit } from "./init.js";
 import { diffFiles } from "./diff.js";
+import { statsFromFile, formatStatsText } from "./stats.js";
 import type { Mcpcheckconfig, Rule, RunReport, FileReport } from "./types.js";
 
-type Format = "text" | "json" | "sarif" | "github";
+type Format = "text" | "json" | "sarif" | "github" | "markdown" | "junit";
 
 interface CliOptions {
   config?: string;
@@ -127,6 +130,10 @@ async function main(): Promise<void> {
     await handleDiff(process.argv.slice(3));
     return;
   }
+  if (process.argv[2] === "stats") {
+    await handleStats(process.argv.slice(3));
+    return;
+  }
 
   const program = new Command()
     .name("mcpcheck")
@@ -135,7 +142,7 @@ async function main(): Promise<void> {
     )
     .argument("[inputs...]", "file paths or globs (defaults to common MCP config locations)")
     .option("-c, --config <path>", "mcpcheck config file")
-    .option("-f, --format <type>", "text | json | sarif | github", "text")
+    .option("-f, --format <type>", "text | json | sarif | github | markdown | junit", "text")
     .option("--fix", "apply autofixes in place", false)
     .option("--fail-on <level>", "exit nonzero threshold: error | warning | info | never", "error")
     .option("-o, --output <path>", "write formatted output to a file")
@@ -241,6 +248,29 @@ async function main(): Promise<void> {
 function filterQuiet(report: RunReport): RunReport {
   const files: FileReport[] = report.files.filter((f) => f.issues.length > 0);
   return { ...report, files };
+}
+
+async function handleStats(argv: string[]): Promise<void> {
+  if (argv.length === 0 || argv.includes("-h") || argv.includes("--help")) {
+    process.stderr.write(
+      "Usage: mcpcheck stats <file...>\n" +
+        "Summarize MCP configs: server count, transport mix, pinning, env usage.\n"
+    );
+    process.exit(argv.length === 0 ? 2 : 0);
+  }
+  const stats = [];
+  for (const file of argv) {
+    try {
+      stats.push(await statsFromFile(file));
+    } catch (err) {
+      process.stderr.write(
+        pc.yellow(`[skip] ${file}: ${(err as Error).message}\n`)
+      );
+    }
+  }
+  if (stats.length === 0) process.exit(1);
+  process.stdout.write(formatStatsText(stats));
+  process.exit(0);
 }
 
 async function handleDiff(argv: string[]): Promise<void> {
@@ -364,6 +394,10 @@ function renderReport(fmt: Format, report: ReturnType<typeof checkFiles> extends
       return formatSarif(report);
     case "github":
       return formatGithub(report);
+    case "markdown":
+      return formatMarkdown(report);
+    case "junit":
+      return formatJunit(report);
     default:
       return formatText(report);
   }

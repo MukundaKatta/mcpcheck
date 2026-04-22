@@ -8,6 +8,25 @@ uses [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **`--format markdown`** — renders a GitHub-flavored Markdown report
+  suitable for pasting into a PR comment or slack message (collapsed
+  details block per file, severity emoji, autofix hint per issue).
+- **`--format junit`** — emits JUnit XML so any CI that understands
+  test-report uploads (GitHub Actions' publish-test-results,
+  Buildkite, GitLab, CircleCI, Jenkins) can display mcpcheck findings
+  in its test-report UI.
+- **`mcpcheck stats <file...>`** — inventory summary of an MCP config:
+  server count, stdio-vs-url split, runner mix (npx/uvx/docker/other),
+  pinned-vs-unpinned count, how many servers declare `env`, how many
+  are disabled. Rolls up a TOTAL across multiple files.
+- **VS Code status-bar item** — compact `mcpcheck: 3E 2W (4⚡)` pill
+  with the active file's error/warning counts and autofix count.
+  Click to run `Fix all`. Background color flips to
+  `statusBarItem.errorBackground` when errors are present.
+- **`examples/github-actions/mcpcheck-pr-comment.yml`** — drop-in
+  workflow that runs the Docker image, generates a Markdown report,
+  and posts-or-updates a single PR comment with it (idempotent via a
+  `<!-- mcpcheck-report -->` marker).
 - **Docker image on ghcr.io** — `ghcr.io/mukundakatta/mcpcheck` builds
   on every main push (`:main`) and every semver tag (`:v1.2.3`,
   `:1.2`, `:1`, `:latest`). Multi-arch (linux/amd64 + linux/arm64),

@@ -327,6 +327,99 @@ describe("unknown-field 'did you mean' suggestions", () => {
   });
 });
 
+describe("formatters (markdown, junit)", () => {
+  it("formatMarkdown renders a table per file with issue counts", async () => {
+    const { formatMarkdown } = await import("../src/formatters/markdown.js");
+    const report = {
+      files: [
+        {
+          file: "a.json",
+          fatal: false,
+          issues: [
+            {
+              ruleId: "hardcoded-secret",
+              severity: "error" as const,
+              message: "leak",
+              jsonPath: "mcpServers.s.env.X",
+              line: 4,
+            },
+          ],
+        },
+      ],
+      errorCount: 1,
+      warningCount: 0,
+      infoCount: 0,
+      durationMs: 1,
+    };
+    const md = formatMarkdown(report);
+    assert.ok(md.includes("# mcpcheck report"));
+    assert.ok(md.includes("**1** error(s)"));
+    assert.ok(md.includes("`hardcoded-secret`"));
+    assert.ok(md.includes("<details>"));
+  });
+
+  it("formatJunit produces one testsuite per file, failures for errors", async () => {
+    const { formatJunit } = await import("../src/formatters/junit.js");
+    const report = {
+      files: [
+        {
+          file: "a.json",
+          fatal: false,
+          issues: [
+            {
+              ruleId: "hardcoded-secret",
+              severity: "error" as const,
+              message: "leak",
+              jsonPath: "mcpServers.s.env.X",
+            },
+          ],
+        },
+      ],
+      errorCount: 1,
+      warningCount: 0,
+      infoCount: 0,
+      durationMs: 1,
+    };
+    const xml = formatJunit(report);
+    assert.ok(xml.startsWith('<?xml'));
+    assert.ok(xml.includes('<testsuites name="mcpcheck"'));
+    assert.ok(xml.includes('failures="1"'));
+    assert.ok(xml.includes('<failure '));
+    assert.ok(xml.includes("hardcoded-secret"));
+  });
+});
+
+describe("mcpcheck stats", () => {
+  it("reports transport mix, pinning, env count for a config", async () => {
+    const { statsFromSource } = await import("../src/stats.js");
+    const source = `{
+      "mcpServers": {
+        "pinned":   { "command": "npx", "args": ["-y", "@org/pkg@1.2.3"] },
+        "unpinned": { "command": "npx", "args": ["-y", "@org/other"] },
+        "remote":   { "url": "https://example.com/mcp" },
+        "docker":   { "command": "docker", "args": ["run", "img:1.0.0"] },
+        "off":      { "command": "node", "args": ["s.js"], "disabled": true, "env": { "A": "b" } }
+      }
+    }`;
+    const s = statsFromSource(source, "x.json");
+    assert.equal(s.totalServers, 5);
+    assert.equal(s.byTransport.stdio, 4);
+    assert.equal(s.byTransport.url, 1);
+    assert.equal(s.byPackageRunner.npx, 2);
+    assert.equal(s.byPackageRunner.docker, 1);
+    assert.equal(s.pinnedPackages, 2);   // pinned + docker img:1.0.0
+    assert.equal(s.unpinnedPackages, 1); // "unpinned"
+    assert.equal(s.serversWithEnv, 1);
+    assert.equal(s.disabledServers, 1);
+  });
+
+  it("returns zeros on unparseable source", async () => {
+    const { statsFromSource } = await import("../src/stats.js");
+    const s = statsFromSource("{ not: json", "x.json");
+    assert.equal(s.totalServers, 0);
+  });
+});
+
 describe("diffReports", () => {
   it("classifies added / removed / unchanged correctly", async () => {
     const { diffReports } = await import("../src/diff.js");
