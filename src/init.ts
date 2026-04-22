@@ -57,7 +57,8 @@ const DEFAULT_CONFIG = `{
     "emptyArgs":             { "enabled": true,  "severity": "warning" },
     "placeholderValue":      { "enabled": true,  "severity": "error"   },
     "plaintextHttpWithToken": { "enabled": true, "severity": "error"   },
-    "invalidEnvVarName":     { "enabled": true,  "severity": "warning" }
+    "invalidEnvVarName":     { "enabled": true,  "severity": "warning" },
+    "emptyEnvValue":         { "enabled": true,  "severity": "warning" }
   }
 }
 `;

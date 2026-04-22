@@ -8,6 +8,19 @@ uses [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **New rule: `empty-env-value`** (warning) — `"API_KEY": ""` is
+  different from omitting the key: the subprocess sees the variable
+  with value `""`. Causes "sometimes auth, sometimes not" inconsistency
+  between libraries that check `if (VAR)` vs `if (VAR !== undefined)`.
+  24 built-in rules.
+- **3 more providers** — Stripe webhook secrets (`whsec_…`), Slack
+  incoming-webhook URLs (`hooks.slack.com/services/T…/B…/…`), Asana
+  personal access tokens.
+- **`.github/workflows/release.yml`** — on any `v*` tag push, runs
+  install + build + tests then creates a GitHub release with notes
+  extracted from the matching `## [version]` section of
+  `CHANGELOG.md`. Safe-by-default: only fires on tags, never on
+  branch pushes.
 - **New rule: `plaintext-http-with-token`** (error) — fires only on
   the third quadrant that the existing URL rules miss: http:// URL
   to a non-local host AND an `Authorization` / `X-API-Key` /

@@ -185,6 +185,16 @@ Plain-http local endpoints are handled separately by the \`invalid-url\` rule (h
 **Fix:** switch the URL scheme to https (or drop the credential header if the server really is open).`,
   },
   {
+    id: "empty-env-value",
+    title: "Env var with an empty-string value",
+    defaultSeverity: "warning",
+    autofix: false,
+    summary: "An `env` entry has value `\"\"`.",
+    details: `Setting \`"API_KEY": ""\` is not the same as omitting the key: the variable still exists in the subprocess's environment with value \`""\`. Libraries that check \`if (VAR)\` treat it as absent; libraries that check \`if (VAR !== undefined)\` see it as set. The resulting inconsistency is painful to debug.
+
+**Fix:** either set the real value (often \`"\${VAR}"\` substitution), or remove the key entirely.`,
+  },
+  {
     id: "invalid-env-var-name",
     title: "Env var name isn't POSIX-portable",
     defaultSeverity: "warning",

@@ -30,6 +30,7 @@ This page is generated from `src/rule-docs.ts`. Don't edit it by hand.
 | [`unstable-reference`](#unstable-reference) | warning | no | `npx <pkg>` / `uvx <pkg>` / `docker run <image>` without a pinned version. |
 | [`http-without-auth`](#http-without-auth) | warning | no | A URL-transport server targets an https endpoint but declares no `Authorization` header. |
 | [`plaintext-http-with-token`](#plaintext-http-with-token) | error | no | The URL starts with `http://` (non-local) AND the server declares `Authorization` / `X-API-Key` / `Cookie` / similar. |
+| [`empty-env-value`](#empty-env-value) | warning | no | An `env` entry has value `""`. |
 | [`invalid-env-var-name`](#invalid-env-var-name) | warning | no | An env var name doesn't match `[A-Z_][A-Z0-9_]*`. |
 | [`placeholder-value`](#placeholder-value) | error | no | An `env` value looks like template text (`YOUR_API_KEY_HERE`, `<token>`, `xxx…`, `replace-me`, `TODO`). |
 | [`empty-args`](#empty-args) | warning | no | A command that needs arguments (`npx` / `uvx` / `docker` / shells) has `args: []`. |
@@ -249,6 +250,19 @@ The URL starts with `http://` (non-local) AND the server declares `Authorization
 That token rides over the wire in cleartext; any on-path attacker sees it. `invalid-url` warns about plain http to non-local hosts in general; this rule fires only on the unambiguously-bad case where a credential is also being sent.
 
 **Fix:** switch the URL scheme to https (or drop the credential header if the server really is open).
+
+## empty-env-value
+
+**Env var with an empty-string value**
+
+- Default severity: `warning`
+- Autofix: no
+
+An `env` entry has value `""`.
+
+Setting `"API_KEY": ""` is not the same as omitting the key: the variable still exists in the subprocess's environment with value `""`. Libraries that check `if (VAR)` treat it as absent; libraries that check `if (VAR !== undefined)` see it as set. The resulting inconsistency is painful to debug.
+
+**Fix:** either set the real value (often `"${VAR}"` substitution), or remove the key entirely.
 
 ## invalid-env-var-name
 

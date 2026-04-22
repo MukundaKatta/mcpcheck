@@ -114,6 +114,9 @@ export const SECRET_PATTERNS: SecretPattern[] = [
   { name: "Supabase personal access token", re: /^sbp_[a-f0-9]{40}$/ },
   { name: "Anyscale API key", re: /^esecret_[A-Za-z0-9]{40,}$/ },
   { name: "Inngest signing key", re: /^signkey-(prod|branch|test)-[A-Za-z0-9]{40,}$/ },
+  { name: "Stripe webhook secret", re: /^whsec_[A-Za-z0-9]{32,}$/ },
+  { name: "Slack webhook URL", re: /^https:\/\/hooks\.slack\.com\/services\/T[A-Z0-9]{8,}\/B[A-Z0-9]{8,}\/[A-Za-z0-9]{16,}$/ },
+  { name: "Asana personal access token", re: /^[0-9]+\/[0-9]+:[A-Za-z0-9]{32}$/ },
   // Google Cloud service account keys are JSON blobs; people sometimes paste the
   // whole thing into a single env var value. Match on the private_key_id field,
   // which is always a 40-char hex string immediately preceded by that key name.

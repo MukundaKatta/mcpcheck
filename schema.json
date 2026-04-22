@@ -189,6 +189,14 @@
             "enabled": true,
             "severity": "warning"
           }
+        },
+        "emptyEnvValue": {
+          "$ref": "#/$defs/RuleConfig",
+          "description": "Env var with an empty-string value — An `env` entry has value `\"\"`.",
+          "default": {
+            "enabled": true,
+            "severity": "warning"
+          }
         }
       }
     },

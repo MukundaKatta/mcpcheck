@@ -15,6 +15,7 @@ import { emptyArgsRule } from "./empty-args.js";
 import { placeholderValueRule } from "./placeholder-value.js";
 import { plaintextHttpWithTokenRule } from "./plaintext-http-with-token.js";
 import { invalidEnvVarNameRule } from "./invalid-env-var-name.js";
+import { emptyEnvValueRule } from "./empty-env-value.js";
 
 export const BUILTIN_RULES: Rule[] = [
   structureRules,
@@ -33,4 +34,5 @@ export const BUILTIN_RULES: Rule[] = [
   placeholderValueRule,
   plaintextHttpWithTokenRule,
   invalidEnvVarNameRule,
+  emptyEnvValueRule,
 ];

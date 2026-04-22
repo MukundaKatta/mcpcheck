@@ -70,6 +70,7 @@ export interface RulesConfig {
   placeholderValue: RuleConfig;
   plaintextHttpWithToken: RuleConfig;
   invalidEnvVarName: RuleConfig;
+  emptyEnvValue: RuleConfig;
 }
 
 export interface Mcpcheckconfig {

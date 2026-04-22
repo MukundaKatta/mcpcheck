@@ -217,6 +217,9 @@ describe("checkSource - expanded secret providers", () => {
     ["SUPABASE_ACCESS_TOKEN", "sbp_" + "a".repeat(40), "Supabase personal access token"],
     ["ANYSCALE_API_KEY", "esecret_" + "a".repeat(44), "Anyscale API key"],
     ["INNGEST_SIGNING_KEY", "signkey-prod-" + "a".repeat(44), "Inngest signing key"],
+    ["STRIPE_WEBHOOK_SECRET", "whsec_" + "a".repeat(48), "Stripe webhook secret"],
+    ["SLACK_WEBHOOK_URL", "https://hooks.slack.com/services/T" + "A".repeat(10) + "/B" + "A".repeat(10) + "/" + "a".repeat(24), "Slack webhook URL"],
+    ["ASANA_PAT", "123456789/987654321:" + "a".repeat(32), "Asana personal access token"],
     // Synthetic value that matches the Discord regex (three dotted segments
     // of the right lengths) without looking like a real base64-encoded
     // snowflake id. We use uppercase placeholder runs so GitHub's secret
