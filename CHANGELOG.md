@@ -8,6 +8,21 @@ uses [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **`mcpcheck --profile <strict|permissive|ci>`** — opinionated
+  severity bundles on top of the defaults. `strict` escalates hygiene
+  rules to error, `permissive` drops them to info (security-critical
+  rules stay at error), `ci` is defaults plus `unknown-field=error`.
+  Profile applies before an explicit `--config`, so a user can take
+  `--profile strict` and still relax a single rule.
+- **`mcpcheck doctor --fix`** — runs `doctor`'s per-client scan, then
+  applies every autofix across whichever client configs exist. Re-
+  checks after writes so the status reflects the fixed state.
+- **npm audit in CI** — the main build job now fails on
+  `--audit-level=moderate`. Catches vulnerable dev deps before they
+  can ship alongside the library.
+- **`docs/ANNOUNCE.md`** — pre-written HN, Reddit, and Twitter launch
+  copy, plus a suggested posting order and a long-form Dev.to outline.
+  Paste-ready the day `npm publish` ships.
 - **`mcpcheck completions <bash|zsh|fish>`** — prints a shell completion
   script. Tab-completes subcommands, flags, enum values (`--format`,
   `--fail-on`, `--client`), rule ids for `--explain`, and `.json` files

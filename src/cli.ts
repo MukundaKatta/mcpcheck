@@ -40,6 +40,7 @@ import {
 import { upgradePins } from "./upgrade-pins.js";
 import { pathsForClient, knownClients } from "./cli-metadata.js";
 import { completionFor, isKnownShell, listShells } from "./completions.js";
+import { applyProfile, isKnownProfile, listProfiles } from "./profiles.js";
 import type { Mcpcheckconfig, Rule, RunReport, FileReport } from "./types.js";
 
 type Format = "text" | "json" | "sarif" | "github" | "markdown" | "junit";
@@ -57,6 +58,7 @@ interface CliOptions {
   baseline?: string;
   baselineWrite?: boolean;
   watch: boolean;
+  profile?: string;
 }
 
 const DEFAULT_BASELINE_PATH = ".mcpcheck.baseline.json";
@@ -115,7 +117,10 @@ async function main(): Promise<void> {
     return;
   }
   if (process.argv[2] === "doctor") {
-    const statuses = await runDoctor();
+    const sub = process.argv.slice(3);
+    const fix = sub.includes("--fix");
+    const { runDoctorFix } = await import("./doctor.js");
+    const statuses = fix ? await runDoctorFix() : await runDoctor();
     process.stdout.write(formatDoctorText(statuses) + "\n");
     process.exit(doctorExitCode(statuses));
   }
@@ -171,6 +176,10 @@ async function main(): Promise<void> {
       "-w, --watch",
       "re-run every time an input file changes (Ctrl-C to exit)",
       false
+    )
+    .option(
+      "--profile <name>",
+      `preset severity bundle: ${listProfiles().join(", ")}`
     )
     .version(readVersion(), "-v, --version")
     .addHelpText(
@@ -228,7 +237,25 @@ async function main(): Promise<void> {
     process.exit(0);
   }
 
-  const config: Mcpcheckconfig = opts.config ? loadConfigFileSafe(opts.config) : mergeConfig();
+  let config: Mcpcheckconfig;
+  if (opts.profile) {
+    if (!isKnownProfile(opts.profile)) {
+      process.stderr.write(
+        pc.red(`Unknown --profile "${opts.profile}". Known: ${listProfiles().join(", ")}.\n`)
+      );
+      process.exit(2);
+    }
+    // Profile first, then any explicitly-loaded user config layered on top.
+    // Without --config, we want the profile's severities to prevail over the
+    // in-code defaults; passing `mergeConfig()` as "overrides" would clobber
+    // them.
+    const userOverrides = opts.config
+      ? loadConfigFileSafeRaw(opts.config)
+      : undefined;
+    config = applyProfile(opts.profile, userOverrides);
+  } else {
+    config = opts.config ? loadConfigFileSafe(opts.config) : mergeConfig();
+  }
   const extraRules = await loadPluginRules(config);
 
   const files = await expandInputs(rawInputs);
@@ -503,6 +530,25 @@ async function handleInit(argv: string[]): Promise<void> {
 function loadConfigFileSafe(path: string): Mcpcheckconfig {
   try {
     return loadConfigFile(path);
+  } catch (err) {
+    const message = (err as Error)?.message ?? String(err);
+    process.stderr.write(
+      pc.red(`Failed to load --config file "${path}": ${message}\n`)
+    );
+    process.exit(2);
+  }
+}
+
+/**
+ * Same as loadConfigFileSafe but returns the *raw* user partial rather than
+ * the default-merged result. Used when we want the profile preset to layer
+ * on top of whatever the user *explicitly* set, without re-asserting the
+ * in-code defaults.
+ */
+function loadConfigFileSafeRaw(path: string): Partial<Mcpcheckconfig> {
+  try {
+    const raw = readFileSync(path, "utf8");
+    return JSON.parse(raw) as Partial<Mcpcheckconfig>;
   } catch (err) {
     const message = (err as Error)?.message ?? String(err);
     process.stderr.write(

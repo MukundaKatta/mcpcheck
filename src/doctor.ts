@@ -15,9 +15,10 @@
  * definitive answer to "is everything ok?".
  */
 
-import { readFile, access } from "node:fs/promises";
+import { readFile, writeFile, access } from "node:fs/promises";
 import { homedir } from "node:os";
 import { checkSource } from "./core.js";
+import { applyFixes } from "./fix.js";
 import { statsFromSource } from "./stats.js";
 import type { Issue } from "./types.js";
 
@@ -73,6 +74,37 @@ export interface ClientStatus {
   warnings?: number;
   fatalError?: string;
   issues?: Issue[];
+}
+
+/**
+ * Apply every autofix mcpcheck knows about across each installed client's
+ * config. Returns the same `ClientStatus[]` shape as `runDoctor`, but with
+ * the issues re-checked after fixes are applied.
+ *
+ * This is the "heal my machine" shortcut: one command, every MCP config
+ * on your system gets its hardcoded secrets swapped to `${VAR}`.
+ */
+export async function runDoctorFix(): Promise<ClientStatus[]> {
+  const before = await runDoctor();
+  for (const status of before) {
+    if (!status.installed || !status.path || status.fatalError) continue;
+    try {
+      const source = await readFile(status.path, "utf8");
+      const report = checkSource(source, status.path);
+      const { output, applied } = applyFixes(source, report.issues);
+      if (applied.length > 0) {
+        await writeFile(status.path, output, "utf8");
+        // Re-check so the returned status reflects post-fix state.
+        const after = checkSource(output, status.path);
+        status.errors = after.issues.filter((i) => i.severity === "error").length;
+        status.warnings = after.issues.filter((i) => i.severity === "warning").length;
+        status.issues = after.issues;
+      }
+    } catch (err) {
+      status.fatalError = (err as Error).message;
+    }
+  }
+  return before;
 }
 
 export async function runDoctor(): Promise<ClientStatus[]> {

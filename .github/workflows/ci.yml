@@ -42,6 +42,10 @@ jobs:
       - name: Every sub-package has a LICENSE
         run: npm run licenses:check
 
+      - name: npm audit (moderate+)
+        run: npm audit --audit-level=moderate
+        continue-on-error: false
+
   self-test:
     runs-on: ubuntu-latest
     needs: build-and-test

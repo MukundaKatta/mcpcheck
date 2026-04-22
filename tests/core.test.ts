@@ -389,6 +389,36 @@ describe("formatters (markdown, junit)", () => {
   });
 });
 
+describe("profile presets", () => {
+  it("strict escalates warning-default rules to error", async () => {
+    const { applyProfile } = await import("../src/profiles.js");
+    const cfg = applyProfile("strict");
+    assert.equal(cfg.rules.unknownField.severity, "error");
+    assert.equal(cfg.rules.relativePath.severity, "error");
+    assert.equal(cfg.rules.unstableReference.severity, "error");
+    // Security-critical rules were already error; still error.
+    assert.equal(cfg.rules.hardcodedSecret.severity, "error");
+    assert.equal(cfg.rules.dangerousCommand.severity, "error");
+  });
+
+  it("permissive downgrades hygiene rules to info but keeps security at error", async () => {
+    const { applyProfile } = await import("../src/profiles.js");
+    const cfg = applyProfile("permissive");
+    assert.equal(cfg.rules.unknownField.severity, "info");
+    assert.equal(cfg.rules.relativePath.severity, "info");
+    assert.equal(cfg.rules.unstableReference.severity, "info");
+    assert.equal(cfg.rules.hardcodedSecret.severity, "error");
+    assert.equal(cfg.rules.dangerousCommand.severity, "error");
+  });
+
+  it("ci keeps defaults but escalates unknownField to error", async () => {
+    const { applyProfile } = await import("../src/profiles.js");
+    const cfg = applyProfile("ci");
+    assert.equal(cfg.rules.unknownField.severity, "error");
+    assert.equal(cfg.rules.relativePath.severity, "warning");
+  });
+});
+
 describe("shell completions", () => {
   it("generates scripts for bash, zsh, and fish that mention every subcommand", async () => {
     const { completionFor, listShells } = await import("../src/completions.js");
