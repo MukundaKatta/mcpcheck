@@ -8,6 +8,17 @@ uses [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **`--color=always|never|auto`** + `--no-color` alias + respect for
+  `NO_COLOR` and `FORCE_COLOR` env vars. A `color-boot.ts` shim
+  imported before picocolors locks in the right mode at module-load
+  time so `mcpcheck ... --no-color | less` stays ANSI-clean.
+- **`mcpcheck why <rule-id>`** — friendlier alias for
+  `--explain <rule-id>`. Same output, more natural invocation.
+- **2 more secret providers** — Modal auth tokens (`ak-…` /
+  `as-…`), Helicone (`sk-helicone-…`).
+- **Richer `--help`** — the top-level help now also lists every
+  subcommand by name under a "Subcommands" section so `mcpcheck
+  --help` surfaces what's available without grepping the CHANGELOG.
 - **`mcpcheck list-servers <file...>`** — one row per server across
   every input file with columns for file, name, transport, target
   (npx package / docker image / url hostname), pinned-ness,

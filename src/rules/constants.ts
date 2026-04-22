@@ -117,6 +117,11 @@ export const SECRET_PATTERNS: SecretPattern[] = [
   { name: "Stripe webhook secret", re: /^whsec_[A-Za-z0-9]{32,}$/ },
   { name: "Slack webhook URL", re: /^https:\/\/hooks\.slack\.com\/services\/T[A-Z0-9]{8,}\/B[A-Z0-9]{8,}\/[A-Za-z0-9]{16,}$/ },
   { name: "Asana personal access token", re: /^[0-9]+\/[0-9]+:[A-Za-z0-9]{32}$/ },
+  // Modal tokens — ak-... prefix (auth key) and as-... (auth secret).
+  { name: "Modal auth token", re: /^a[ks]-[A-Za-z0-9_-]{40,}$/ },
+  // Helicone — sk-helicone- prefix. Scope to the prefix so it doesn't clash
+  // with the generic OpenAI sk- family.
+  { name: "Helicone API key", re: /^sk-helicone-[A-Za-z0-9_-]{20,}$/ },
   // Google Cloud service account keys are JSON blobs; people sometimes paste the
   // whole thing into a single env var value. Match on the private_key_id field,
   // which is always a 40-char hex string immediately preceded by that key name.

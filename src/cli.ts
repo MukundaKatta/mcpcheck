@@ -9,6 +9,7 @@
  *   mcpcheck config.json --fix                  # apply autofixes in place
  */
 
+import "./color-boot.js"; // MUST be first — sets NO_COLOR / FORCE_COLOR before picocolors caches.
 import { readFile, writeFile } from "node:fs/promises";
 import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
@@ -186,6 +187,25 @@ async function main(): Promise<void> {
     await handleFmt(process.argv.slice(3));
     return;
   }
+  if (process.argv[2] === "why") {
+    const id = process.argv[3];
+    if (!id || id === "-h" || id === "--help") {
+      process.stderr.write(
+        "Usage: mcpcheck why <rule-id>\n" +
+          'Prints the same docs as `mcpcheck --explain <rule-id>`. Use "all" to dump every rule.\n'
+      );
+      process.exit(id ? 0 : 2);
+    }
+    const text = explainRule(id);
+    if (!text) {
+      process.stderr.write(
+        pc.red(`Unknown rule "${id}". Try \`mcpcheck --list-rules\`.\n`)
+      );
+      process.exit(2);
+    }
+    process.stdout.write(text);
+    process.exit(0);
+  }
   if (process.argv[2] === "list-servers") {
     await handleListServers(process.argv.slice(3));
     return;
@@ -287,6 +307,12 @@ async function main(): Promise<void> {
       "--sort-by <key>",
       "sort issues within each file by severity | rule | line | file"
     )
+    .option(
+      "--color <mode>",
+      "always | never | auto. Respects NO_COLOR / FORCE_COLOR env vars.",
+      "auto"
+    )
+    .option("--no-color", "alias for --color=never")
     .version(readVersion(), "-v, --version")
     .addHelpText(
       "after",
@@ -305,6 +331,11 @@ async function main(): Promise<void> {
         "  mcpcheck stats path.json                     inventory summary of an MCP config",
         "  mcpcheck --baseline-write                    snapshot today's issues as .mcpcheck.baseline.json",
         "  mcpcheck --baseline                          fail only on new issues (respects --baseline-write output)",
+        "",
+        "Subcommands (more via <cmd> --help):",
+        "  init, diff, stats, doctor, doctor --fix, upgrade-pins, merge, convert,",
+        "  fmt, graph, list-servers, pipe, snapshot, restore, scaffold-workflow,",
+        "  completions, mcp-server, lsp, version, why",
       ].join("\n")
     )
     .parse(process.argv);
