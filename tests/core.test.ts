@@ -389,6 +389,40 @@ describe("formatters (markdown, junit)", () => {
   });
 });
 
+describe("mcpcheck doctor", () => {
+  it("formats the table and picks a sane exit code", async () => {
+    const { formatDoctorText, doctorExitCode } = await import("../src/doctor.js");
+    const statuses = [
+      {
+        client: "Claude Desktop" as const,
+        path: "~/foo.json",
+        installed: true,
+        servers: 2,
+        errors: 0,
+        warnings: 0,
+      },
+      { client: "Cursor" as const, installed: false },
+      {
+        client: "Windsurf" as const,
+        path: "~/bar.json",
+        installed: true,
+        servers: 1,
+        errors: 1,
+        warnings: 0,
+      },
+    ];
+    const txt = formatDoctorText(statuses);
+    assert.ok(txt.includes("Claude Desktop"));
+    assert.ok(txt.includes("(not installed)"));
+    assert.ok(txt.includes("1 error(s)"));
+    assert.equal(doctorExitCode(statuses), 1);
+    assert.equal(
+      doctorExitCode([{ client: "Zed" as const, installed: false }]),
+      0
+    );
+  });
+});
+
 describe("mcpcheck stats", () => {
   it("reports transport mix, pinning, env count for a config", async () => {
     const { statsFromSource } = await import("../src/stats.js");

@@ -1,0 +1,32 @@
+{
+  "name": "mcpcheck-plugin-starter",
+  "version": "0.0.0",
+  "description": "Fork-me starter template for an mcpcheck rule plugin. One example rule (my-org/no-beta-servers) demonstrates the full setup.",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "test": "tsx --test tests/**/*.test.ts",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "mcpcheck": "file:../.."
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

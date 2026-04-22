@@ -8,6 +8,20 @@ uses [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **`mcpcheck doctor`** — per-client health summary in one screen.
+  Resolves each known MCP client (Claude Desktop, Claude Code, Cursor,
+  Cline, Windsurf, Zed), picks the first candidate path that exists,
+  runs `checkSource` + `stats`, and renders aligned lines like
+  `✓  Claude Desktop  ~/Library/…  3 server(s), 0 issues`. Exits 1 if
+  any installed client has an error-level issue. Think `brew doctor`.
+- **Playground social preview** — OpenGraph + Twitter-Card + theme-color
+  meta tags, canonical URL, and an inline-SVG favicon. Links to
+  `mukundakatta.github.io/mcpcheck` now render nicely in Slack, Discord,
+  Twitter, and Mastodon.
+- **`extensions/rule-plugin-starter/`** — fork-me template for a custom
+  rule pack. Ships one example rule (`my-org/no-beta-servers`), a
+  Plugin default export, tsconfig, and test scaffold. The README walks
+  through wiring it into `mcpcheck.config.json` via the plugins array.
 - **`--format markdown`** — renders a GitHub-flavored Markdown report
   suitable for pasting into a PR comment or slack message (collapsed
   details block per file, severity emoji, autofix hint per issue).

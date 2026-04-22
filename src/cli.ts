@@ -31,6 +31,7 @@ import { explainRule, listRuleIds } from "./rule-docs.js";
 import { runInit } from "./init.js";
 import { diffFiles } from "./diff.js";
 import { statsFromFile, formatStatsText } from "./stats.js";
+import { runDoctor, formatDoctorText, doctorExitCode } from "./doctor.js";
 import type { Mcpcheckconfig, Rule, RunReport, FileReport } from "./types.js";
 
 type Format = "text" | "json" | "sarif" | "github" | "markdown" | "junit";
@@ -134,6 +135,11 @@ async function main(): Promise<void> {
     await handleStats(process.argv.slice(3));
     return;
   }
+  if (process.argv[2] === "doctor") {
+    const statuses = await runDoctor();
+    process.stdout.write(formatDoctorText(statuses) + "\n");
+    process.exit(doctorExitCode(statuses));
+  }
 
   const program = new Command()
     .name("mcpcheck")
@@ -167,6 +173,8 @@ async function main(): Promise<void> {
         "  mcpcheck --explain hardcoded-secret          print rule documentation",
         "  mcpcheck init                                scaffold mcpcheck.config.json + CI",
         "  mcpcheck diff a.json b.json                  show which issues changed between two configs",
+        "  mcpcheck doctor                              per-client health summary across installed MCP clients",
+        "  mcpcheck stats path.json                     inventory summary of an MCP config",
       ].join("\n")
     )
     .parse(process.argv);
