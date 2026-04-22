@@ -61,6 +61,7 @@ export interface RulesConfig {
   emptyServers: RuleConfig;
   duplicateServerName: RuleConfig;
   unstableReference: RuleConfig;
+  dangerousCommand: RuleConfig;
 }
 
 export interface Mcpcheckconfig {

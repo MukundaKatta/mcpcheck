@@ -19,7 +19,9 @@
     "dev": "tsc -w",
     "test": "tsx --test tests/**/*.test.ts",
     "lint": "tsc --noEmit",
-    "prepublishOnly": "npm run build && npm test"
+    "docs:gen": "node scripts/gen-rules-md.mjs",
+    "docs:check": "node scripts/gen-rules-md.mjs && git diff --exit-code -- docs/RULES.md",
+    "prepublishOnly": "npm run build && npm test && npm run docs:check"
   },
   "keywords": [
     "mcp",
@@ -62,6 +64,7 @@
     "dist",
     "action.yml",
     "README.md",
+    "CHANGELOG.md",
     "LICENSE"
   ]
 }

@@ -24,6 +24,7 @@ import { formatText } from "./formatters/text.js";
 import { formatJson } from "./formatters/json.js";
 import { formatSarif } from "./formatters/sarif.js";
 import { formatGithub } from "./formatters/github.js";
+import { explainRule, listRuleIds } from "./rule-docs.js";
 import type { Mcpcheckconfig, Rule } from "./types.js";
 
 type Format = "text" | "json" | "sarif" | "github";
@@ -34,6 +35,8 @@ interface CliOptions {
   fix: boolean;
   failOn: "error" | "warning" | "info" | "never";
   output?: string;
+  explain?: string;
+  listRules?: boolean;
 }
 
 /**
@@ -83,11 +86,29 @@ async function main(): Promise<void> {
     .option("--fix", "apply autofixes in place", false)
     .option("--fail-on <level>", "exit nonzero threshold: error | warning | info | never", "error")
     .option("-o, --output <path>", "write formatted output to a file")
+    .option("--explain <rule-id>", "print docs for a rule and exit")
+    .option("--list-rules", "list all rule ids and exit", false)
     .version(readVersion(), "-v, --version")
     .parse(process.argv);
 
   const rawInputs = program.args.length > 0 ? program.args : DEFAULT_GLOBS;
   const opts = program.opts<CliOptions>();
+
+  if (opts.listRules) {
+    process.stdout.write(listRuleIds().join("\n") + "\n");
+    process.exit(0);
+  }
+  if (opts.explain) {
+    const text = explainRule(opts.explain);
+    if (!text) {
+      process.stderr.write(
+        pc.red(`Unknown rule "${opts.explain}". Try \`mcpcheck --list-rules\`.\n`)
+      );
+      process.exit(2);
+    }
+    process.stdout.write(text);
+    process.exit(0);
+  }
 
   const config: Mcpcheckconfig = opts.config ? loadConfigFile(opts.config) : mergeConfig();
   const extraRules = await loadPluginRules(config);

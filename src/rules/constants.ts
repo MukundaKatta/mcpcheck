@@ -37,9 +37,21 @@ export const SECRET_PATTERNS: SecretPattern[] = [
   { name: "Google AI API key", re: /^AIza[0-9A-Za-z_-]{30,}$/ },
   { name: "GitHub personal token", re: /^(ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{20,}$/ },
   { name: "GitHub fine-grained PAT", re: /^github_pat_[A-Za-z0-9_]{30,}$/ },
+  { name: "GitLab personal token", re: /^glpat-[A-Za-z0-9_-]{20,}$/ },
   { name: "Slack bot token", re: /^xox[abp]-[0-9]+-[0-9]+-[A-Za-z0-9]+$/ },
   { name: "AWS access key", re: /^AKIA[0-9A-Z]{16}$/ },
-  { name: "Stripe secret key", re: /^sk_(live|test)_[A-Za-z0-9]{20,}$/ },
+  { name: "Stripe secret key", re: /^(sk|rk)_(live|test)_[A-Za-z0-9]{20,}$/ },
+  { name: "Twilio API key", re: /^SK[0-9a-fA-F]{32}$/ },
+  { name: "SendGrid API key", re: /^SG\.[A-Za-z0-9_-]{22}\.[A-Za-z0-9_-]{43}$/ },
+  { name: "Hugging Face token", re: /^hf_[A-Za-z0-9]{30,}$/ },
+  { name: "npm access token", re: /^npm_[A-Za-z0-9]{36}$/ },
+  // Google Cloud service account keys are JSON blobs; people sometimes paste the
+  // whole thing into a single env var value. Match on the private_key_id field,
+  // which is always a 40-char hex string immediately preceded by that key name.
+  {
+    name: "Google Cloud service account JSON",
+    re: /"private_key_id"\s*:\s*"[a-f0-9]{40}"/,
+  },
   {
     name: "Azure / OpenAI-compatible API key",
     re: /^[a-f0-9]{32}$/i,

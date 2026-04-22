@@ -117,20 +117,28 @@ console.log(`Fixed ${applied.length} issue(s).`);
 
 | ID | Checks | Default severity | Autofix |
 |---|---|---|---|
-| `invalid-json` | File is not parseable JSON. | error | no |
+| `invalid-json` | File is not parseable JSON/JSONC. | error | no |
 | `missing-transport` | Server must have `command` or `url`. | error | no |
 | `conflicting-transport` | Both `command` and `url` set, or `transport` disagrees. | error | no |
 | `invalid-command` | `command` missing or not a string. | error | no |
 | `invalid-args` | `args` is not an array of strings. | error | no |
 | `invalid-env` | `env` is not an object of strings. | error | no |
-| `hardcoded-secret` | Env value matches a known secret pattern (OpenAI, Anthropic, GitHub, Slack, AWS, Stripe, Azure, Google). | error | **yes** |
+| `hardcoded-secret` | Env value matches a known secret pattern (OpenAI, Anthropic, GitHub, GitLab, Slack, AWS, Stripe, Twilio, SendGrid, Hugging Face, npm, Google AI, Google Cloud service JSON, Azure OpenAI). | error | **yes** |
 | `invalid-url` | `url` is not valid, not http/https, or plain http to a non-local host. | error | no |
 | `invalid-transport` | `transport` is not `stdio`/`sse`/`streamable-http`. | error | no |
 | `unknown-field` | Server has a field not in the MCP schema. | warning | no |
 | `relative-path` | `command` starts with `./` or `../`. | warning | no |
-| `empty-servers` | Config has no `mcpServers` or `servers`. | warning | no |
+| `empty-servers` | Config has no `mcpServers` / `servers` / `context_servers`. | warning | no |
 | `duplicate-server-name` | Two server names that differ only by case. | error | no |
 | `unstable-reference` | `npx <pkg>` / `uvx <pkg>` / `docker <img:latest>` without a pinned version. | warning | no |
+| `dangerous-command` | Privilege escalation (`sudo`), remote-shell pipe (`curl \| sh`), host-root mount (`-v /:/`), docker `--privileged`, or `--unsafe-perm`. | error | no |
+
+Full per-rule docs live at [docs/RULES.md](./docs/RULES.md) and are also available from the CLI:
+
+```bash
+mcpcheck --list-rules                   # print all rule ids
+mcpcheck --explain hardcoded-secret     # print the docs for one rule
+```
 
 The `hardcoded-secret` rule recognises prefixes from every major provider (see [constants.ts](./src/rules/constants.ts)) and always proposes a fix: the value becomes `"${ENV_VAR}"`, which every MCP client expands from the caller's shell.
 
@@ -192,7 +200,8 @@ Running `mcpcheck` with no arguments scans every path in the table above, plus `
 ```bash
 npm install
 npm run build
-npm test       # 25 passing
+npm test         # 39 passing
+npm run docs:gen # regenerate docs/RULES.md from src/rule-docs.ts
 ```
 
 ## License

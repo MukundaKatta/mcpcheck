@@ -1,0 +1,202 @@
+/**
+ * Per-rule long-form documentation used by both `docs/RULES.md` generation and
+ * the `mcpcheck --explain <rule-id>` CLI flag. Keeping the prose in one file
+ * means the docs and the CLI explanation never drift.
+ *
+ * Each entry is written as if answering three questions:
+ *   1. What exactly does the rule flag?
+ *   2. Why does it matter in an MCP config specifically?
+ *   3. How do I make it stop firing?
+ */
+
+export interface RuleDoc {
+  id: string;
+  title: string;
+  defaultSeverity: "error" | "warning" | "info";
+  autofix: boolean;
+  summary: string;
+  /** Multi-paragraph markdown. */
+  details: string;
+}
+
+export const RULE_DOCS: RuleDoc[] = [
+  {
+    id: "invalid-json",
+    title: "File is not parseable JSON (or JSONC)",
+    defaultSeverity: "error",
+    autofix: false,
+    summary: "Config failed to parse even after stripping comments and trailing commas.",
+    details: `mcpcheck first tries to parse the file as JSONC (JSON with \`//\` and \`/* */\` comments and trailing commas — what Claude Desktop, Cursor, and VS Code actually accept). If that still fails, the file is reported as \`invalid-json\` and every other rule is skipped for that file.
+
+**Fix:** open the file and check the line number in the error message. Common culprits are unescaped backslashes in Windows paths (\`"C:\\Users..."\` must be \`"C:\\\\Users..."\`) and stray commas between top-level keys.`,
+  },
+  {
+    id: "missing-transport",
+    title: "Server has no transport",
+    defaultSeverity: "error",
+    autofix: false,
+    summary: "A server entry has neither \`command\` (stdio) nor \`url\` (http/sse).",
+    details: `Every MCP server declaration has to tell the client how to reach it. For local processes that's \`"command": "npx"\` (plus optional \`args\`); for remote servers that's \`"url": "https://…"\`.
+
+**Fix:** add one of the two. If you meant to disable the entry, set \`"disabled": true\` instead of leaving it transport-less.`,
+  },
+  {
+    id: "conflicting-transport",
+    title: "Transport fields contradict each other",
+    defaultSeverity: "error",
+    autofix: false,
+    summary: "Both \`command\` and \`url\` are set, or \`transport\` disagrees with them.",
+    details: `MCP supports stdio (local process) and http/sse (remote). Setting both \`command\` and \`url\` on the same server makes the client pick one, and different clients pick differently. Setting \`"transport": "sse"\` while also setting \`command\` is the same problem in a louder voice.
+
+**Fix:** remove whichever field doesn't match your intent.`,
+  },
+  {
+    id: "invalid-command",
+    title: "\`command\` is missing or not a string",
+    defaultSeverity: "error",
+    autofix: false,
+    summary: "\`command\` must be a non-empty string.",
+    details: `Nothing exotic to say here — \`command\` is passed verbatim to the OS process launcher and has to be a string.
+
+**Fix:** set it to the binary you want to run (\`"npx"\`, \`"node"\`, \`"/usr/local/bin/my-mcp"\`).`,
+  },
+  {
+    id: "invalid-args",
+    title: "\`args\` is not an array of strings",
+    defaultSeverity: "error",
+    autofix: false,
+    summary: "\`args\` has to be an array of strings.",
+    details: `Clients pass \`args\` directly to the OS as argv. Numbers, booleans, nested arrays — none of that works.
+
+**Fix:** quote every argument as a JSON string.`,
+  },
+  {
+    id: "invalid-env",
+    title: "\`env\` is not a string-valued object",
+    defaultSeverity: "error",
+    autofix: false,
+    summary: "\`env\` must be an object, and each value must be a string.",
+    details: `Environment variables are string key-value pairs at the OS level. JSON numbers and booleans are not valid values.
+
+**Fix:** wrap values in quotes (\`"DEBUG": "1"\`, not \`"DEBUG": 1\`).`,
+  },
+  {
+    id: "hardcoded-secret",
+    title: "Hardcoded API key",
+    defaultSeverity: "error",
+    autofix: true,
+    summary: "A value in \`env\` matches a known secret format (OpenAI, Anthropic, GitHub, AWS, Stripe, Twilio, SendGrid, HuggingFace, npm, GitLab, Slack, Azure, Google).",
+    details: `Your MCP config is often committed to a repo, synced across machines, or pasted into docs. Hardcoded API keys in \`env\` values are a common source of leaks.
+
+mcpcheck matches on format (prefix + length + charset), so the check runs offline and does not talk to any provider.
+
+**Fix:** either run \`mcpcheck --fix\`, which replaces the value with \`"\${VAR_NAME}"\` (MCP clients expand that from the shell at launch), or remove the value and export the variable in your shell profile.`,
+  },
+  {
+    id: "invalid-url",
+    title: "URL is malformed, non-http(s), or insecure",
+    defaultSeverity: "error",
+    autofix: false,
+    summary: "\`url\` does not parse, isn't http/https, or is plain http to a non-local host.",
+    details: `Remote MCP servers must speak http or https. Plain \`http://\` to anything that isn't \`localhost\`, \`127.0.0.1\`, \`::1\`, a \`.localhost\` host, or a \`.local\` host is downgraded to a warning (you probably meant to, but it will leak the bearer token on the wire).
+
+**Fix:** use \`https://\` for anything on the internet.`,
+  },
+  {
+    id: "invalid-transport",
+    title: "\`transport\` value is not one of the accepted tokens",
+    defaultSeverity: "error",
+    autofix: false,
+    summary: "\`transport\` must be one of \`stdio\`, \`sse\`, \`streamable-http\`.",
+    details: `Clients that look at \`transport\` use it to pick the transport implementation. Values outside the set silently get ignored or fall back to \`stdio\`, and you then get "the server isn't responding" with no better hint.
+
+**Fix:** pick one of the supported values, or delete the field and let the client infer it from \`command\` vs \`url\`.`,
+  },
+  {
+    id: "unknown-field",
+    title: "Unknown field on a server",
+    defaultSeverity: "warning",
+    autofix: false,
+    summary: "A field on the server object isn't in the MCP schema.",
+    details: `This is a typo-catcher. \`"commnad"\` instead of \`"command"\`, \`"autoApprve"\` instead of \`"autoApprove"\`. Some fields are client-specific extensions and are deliberately unknown to mcpcheck (that's why the default severity is \`warning\`, not \`error\`).
+
+**Fix:** fix the typo, or turn the rule off in \`mcpcheck.config.json\` if you rely on a client-specific extension.`,
+  },
+  {
+    id: "relative-path",
+    title: "\`command\` starts with \`./\` or \`../\`",
+    defaultSeverity: "warning",
+    autofix: false,
+    summary: "The command is a relative path.",
+    details: `Different MCP clients resolve \`cwd\` differently — some from the user's home, some from the directory containing the config, some from wherever the app bundle was launched. A relative \`command\` that works in testing often breaks on another user's machine.
+
+**Fix:** use an absolute path, or put the binary on \`PATH\` and reference it by name.`,
+  },
+  {
+    id: "empty-servers",
+    title: "Config has no server entries",
+    defaultSeverity: "warning",
+    autofix: false,
+    summary: "No \`mcpServers\` / \`servers\` / \`context_servers\` key, or it is empty.",
+    details: `Not necessarily a bug — Claude Code's \`~/.claude.json\` holds other state too — but very often the sign of a file that was partially edited or a key that got typo'd.
+
+**Fix:** add servers, or disable the rule for files you know don't carry a server map.`,
+  },
+  {
+    id: "duplicate-server-name",
+    title: "Case-insensitive duplicate server name",
+    defaultSeverity: "error",
+    autofix: false,
+    summary: "Two server entries differ only by case.",
+    details: `Server names appear in prompts and logs; if you have \`"GitHub"\` and \`"github"\` you will confuse both the model and yourself, and on case-insensitive filesystems clients may overwrite one with the other.
+
+**Fix:** rename one.`,
+  },
+  {
+    id: "unstable-reference",
+    title: "Unpinned package or image reference",
+    defaultSeverity: "warning",
+    autofix: false,
+    summary: "\`npx <pkg>\` / \`uvx <pkg>\` / \`docker run <image>\` without a pinned version.",
+    details: `Most MCP servers are distributed via \`npx\`, \`uvx\`, or \`docker\`. Running them unpinned means you get whatever the registry says is latest on every launch, which is how configs that worked yesterday start failing tomorrow (and how supply-chain attacks get delivered).
+
+**Fix:** pin the exact version: \`npx -y @org/pkg@1.2.3\`, \`uvx pkg==1.2.3\`, \`docker run image:1.2.3\` (explicit tag, not \`:latest\` and not implicit).`,
+  },
+  {
+    id: "dangerous-command",
+    title: "Privilege escalation, remote-shell pipe, or host-root mount",
+    defaultSeverity: "error",
+    autofix: false,
+    summary: "Config instructs the client to execute \`curl | sh\`, \`sudo\`, \`docker --privileged\`, \`-v /:/\`, or similar.",
+    details: `An MCP config is a latent instruction: the client runs it every time it starts. Configs that fetch-and-pipe into a shell, escalate privilege, or mount the host root into a container effectively hand your machine to whatever is on the other end.
+
+The rule flags:
+
+- Privilege-escalation wrappers: \`sudo\`, \`doas\`, \`pkexec\`, \`runas\`, \`gosu\`, \`su\`.
+- "Run as root" flags: \`--unsafe-perm\`, \`--allow-root\`, \`--allow-run-as-root\`.
+- Remote-shell pipes: any argv that contains both a fetcher (\`curl\`, \`wget\`, \`iwr\`, \`Invoke-WebRequest\`) and a shell sink (\`| sh\`, \`| bash\`, \`| zsh\`, \`| pwsh\`, \`| iex\`).
+- Docker \`--privileged\`.
+- Docker volumes that mount the host root: \`-v /:/anything\`, \`--mount source=/,...\`.
+- A literal \`rm -rf /\` sequence anywhere in \`args\`.
+
+**Fix:** don't do any of these. If the upstream server really needs extra privilege, wrap it in a small setuid helper that you audit once, and point the config at that helper.`,
+  },
+];
+
+export function explainRule(id: string): string | undefined {
+  const doc = RULE_DOCS.find((d) => d.id === id);
+  if (!doc) return undefined;
+  return [
+    `${doc.id}  —  ${doc.title}`,
+    `default: ${doc.defaultSeverity}${doc.autofix ? "  •  autofix: yes" : ""}`,
+    "",
+    doc.summary,
+    "",
+    doc.details,
+    "",
+  ].join("\n");
+}
+
+export function listRuleIds(): string[] {
+  return RULE_DOCS.map((d) => d.id);
+}

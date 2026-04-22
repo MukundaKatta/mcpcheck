@@ -6,6 +6,7 @@ import { envRules } from "./env.js";
 import { urlRules } from "./url.js";
 import { unknownFieldRule } from "./unknown-field.js";
 import { unstableReferenceRule } from "./unstable-reference.js";
+import { dangerousCommandRule } from "./dangerous-command.js";
 
 export const BUILTIN_RULES: Rule[] = [
   structureRules,
@@ -15,4 +16,5 @@ export const BUILTIN_RULES: Rule[] = [
   urlRules,
   unknownFieldRule,
   unstableReferenceRule,
+  dangerousCommandRule,
 ];

@@ -8,6 +8,23 @@ uses [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **`dangerous-command` rule (default: error).** Flags privilege escalation
+  (`sudo`, `doas`, `pkexec`, `runas`, `gosu`, `su`), remote-shell pipes
+  (`curl https://... | sh`, also detected through `bash -c` / `sh -c`
+  wrappers), docker `--privileged`, host-root bind mounts (`-v /:/host`,
+  `--mount source=/,...`), `--unsafe-perm` / `--allow-run-as-root` flags,
+  and literal `rm -rf /` sequences in `args`.
+- **More secret providers.** Added GitLab PATs (`glpat-`), Twilio API keys
+  (`SK` + 32 hex), SendGrid keys (`SG.…`), Hugging Face tokens (`hf_`),
+  npm access tokens (`npm_`), Stripe restricted keys (`rk_live_` /
+  `rk_test_`), and Google Cloud service-account JSON blobs pasted into an
+  env value (detected via the `private_key_id` signature).
+- **`mcpcheck --explain <rule-id>`** and **`mcpcheck --list-rules`.** Print
+  per-rule documentation directly from the CLI. The docs are generated from
+  the same source as [docs/RULES.md](docs/RULES.md), so the two cannot drift.
+- **`docs/RULES.md`** generated rule reference plus `npm run docs:gen` /
+  `npm run docs:check`; `prepublishOnly` now refuses to publish if the
+  generated docs are out of date.
 - **Zed support.** `context_servers` (Zed's key inside `~/.config/zed/settings.json`)
   is recognised as a valid server map; Zed configs previously fell through to
   `empty-servers` and skipped every per-server rule.
