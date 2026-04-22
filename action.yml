@@ -1,32 +1,64 @@
-name: 'MCP Config Validator'
-description: 'Validates MCP server configs (mcp.json, .mcp.json, claude_desktop_config.json) against the MCP spec'
-author: 'MukundaKatta'
+name: mcpcheck
+description: Validate MCP (Model Context Protocol) config files for Claude, Cursor, Cline, Windsurf, and Zed. Emits inline PR annotations and SARIF for Code Scanning.
+author: Mukunda Katta
 branding:
-  icon: 'check-circle'
-  color: 'purple'
-
+  icon: check-circle
+  color: purple
 inputs:
-  config-path:
-    description: 'Glob pattern for MCP config files to validate. Default catches common locations.'
+  paths:
+    description: Globs of MCP config files to lint, space-separated. Leave empty for default locations.
+    default: ""
     required: false
-    default: '**/{mcp,claude_desktop_config,.mcp}.json'
-  strict:
-    description: 'Fail on warnings as well as errors. Default false.'
+  config:
+    description: Path to a mcpcheck.config.json file.
     required: false
-    default: 'false'
-  fail-on-missing:
-    description: 'Fail if no config files are found. Default false.'
+    default: ""
+  fail-on:
+    description: Exit nonzero on this severity and above (error, warning, info, never).
+    default: error
     required: false
-    default: 'false'
-
+  sarif-output:
+    description: Path to write SARIF 2.1.0 output.
+    default: mcpcheck.sarif
+    required: false
+  version:
+    description: mcpcheck npm version to install (default latest).
+    default: latest
+    required: false
 outputs:
-  files-checked:
-    description: 'Number of config files validated'
-  errors:
-    description: 'Number of validation errors found'
-  warnings:
-    description: 'Number of validation warnings found'
-
+  sarif-path:
+    description: Path to the generated SARIF file.
+    value: ${{ steps.mcpcheck.outputs.sarif-path }}
+  error-count:
+    description: Number of error-level issues found.
+    value: ${{ steps.mcpcheck.outputs.error-count }}
 runs:
-  using: 'node20'
-  main: 'dist/index.js'
+  using: composite
+  steps:
+    - name: Install mcpcheck
+      shell: bash
+      run: npm install -g mcpcheck@${{ inputs.version }}
+    - name: Run mcpcheck (annotations)
+      shell: bash
+      run: |
+        mcpcheck ${{ inputs.paths }} \
+          --format github \
+          ${{ inputs.config && format('--config {0}', inputs.config) || '' }} \
+          --fail-on never || true
+    - name: Run mcpcheck (SARIF)
+      id: mcpcheck
+      shell: bash
+      run: |
+        set +e
+        mcpcheck ${{ inputs.paths }} \
+          --format sarif \
+          ${{ inputs.config && format('--config {0}', inputs.config) || '' }} \
+          --fail-on ${{ inputs.fail-on }} \
+          --output ${{ inputs.sarif-output }}
+        code=$?
+        echo "sarif-path=${{ inputs.sarif-output }}" >> "$GITHUB_OUTPUT"
+        if [ -f "${{ inputs.sarif-output }}" ]; then
+          errs=$(grep -c '"level": *"error"' "${{ inputs.sarif-output }}" || true)
+          echo "error-count=$errs" >> "$GITHUB_OUTPUT"
+        fi
+        exit $code

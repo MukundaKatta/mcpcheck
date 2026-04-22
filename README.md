@@ -1,85 +1,183 @@
-# MCP Config Validator — GitHub Action
+# mcpcheck
 
-[![test](https://github.com/MukundaKatta/mcp-validate-action/actions/workflows/test.yml/badge.svg)](https://github.com/MukundaKatta/mcp-validate-action/actions)
-[![Marketplace](https://img.shields.io/badge/marketplace-mcp--validate-blue)](https://github.com/marketplace/actions/mcp-config-validator)
+[![npm](https://img.shields.io/npm/v/mcpcheck.svg)](https://www.npmjs.com/package/mcpcheck)
+[![CI](https://github.com/MukundaKatta/mcpcheck/actions/workflows/ci.yml/badge.svg)](https://github.com/MukundaKatta/mcpcheck/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 
-Validates [MCP](https://modelcontextprotocol.io) server configs on every push — catches malformed `mcp.json`, `.mcp.json`, and `claude_desktop_config.json` before they break clients.
+A linter for **MCP (Model Context Protocol)** config files. Works on every client that reads `mcp.json` / `.mcp.json` / `claude_desktop_config.json`: Claude Desktop, Cursor, Cline, Windsurf, Zed.
 
-## Why
+- **CLI** — `mcpcheck` scans common config paths (or anything you glob at it).
+- **GitHub Action** — inline PR annotations + SARIF for Code Scanning.
+- **Autofix** — replaces hardcoded secrets with `${VAR}` interpolation.
+- **Programmatic API** — compose rules into your own pipeline.
 
-MCP configs are JSON files hand-edited by humans. Typos, missing fields, and hardcoded secrets all slip in. Clients like Claude Desktop, Cursor, and Cline error-out in opaque ways when configs are wrong. This action catches the common ones at CI time:
+```
+$ mcpcheck
+.cursor/mcp.json
+  line 14   error   hardcoded-secret
+    Server "github" env.GITHUB_TOKEN looks like a hardcoded GitHub personal token.
+    at mcpServers.github.env.GITHUB_TOKEN
+    fix: Replace hardcoded secret with ${GITHUB_TOKEN} env-var substitution
+  line 22   warning relative-path
+    Server "local" command "./scripts/run.sh" is a relative path.
+    at mcpServers.local.command
 
-- ❌ Missing both `command` and `url`
-- ❌ Hardcoded API keys in `env` (`sk-...`, `ghp_...`, etc.)
-- ❌ Invalid JSON
-- ❌ Invalid transport (`websocket`, `grpc`, ...)
-- ⚠️ Relative paths in `command` (brittle)
-- ⚠️ Unknown fields (may be client-specific or typos)
+Checked 1 file(s) in 3ms: 1 error, 1 warning.
+```
+
+## Install
+
+```bash
+npm install -g mcpcheck
+```
+
+Or one-off:
+
+```bash
+npx mcpcheck
+```
 
 ## Usage
 
+### CLI
+
+```bash
+mcpcheck                                     # scan common MCP config paths
+mcpcheck ~/.cursor/mcp.json                  # single file
+mcpcheck '**/mcp.json' --format sarif        # emit SARIF for Code Scanning
+mcpcheck config.json --fix                   # apply autofixes in place
+mcpcheck config.json --fail-on warning       # strict CI
+```
+
+| Flag | Purpose |
+|---|---|
+| `--format text\|json\|sarif\|github` | Output format (default `text`) |
+| `--fix` | Apply autofixes in place (secret to `${VAR}` substitution) |
+| `--config <path>` | JSON config file |
+| `--fail-on error\|warning\|info\|never` | Exit-code threshold (default `error`) |
+| `--output <path>` | Write formatted output to a file |
+| `-v`, `--version` | Print version |
+
+### GitHub Action
+
 ```yaml
-# .github/workflows/mcp-validate.yml
-name: MCP validate
-on: [push, pull_request]
+# .github/workflows/mcpcheck.yml
+name: mcpcheck
+on: [pull_request]
+permissions:
+  contents: read
+  pull-requests: write
+  security-events: write
 jobs:
-  validate:
+  mcpcheck:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: MukundaKatta/mcp-validate-action@v1
+      - uses: MukundaKatta/mcpcheck@v1
+        with:
+          paths: '**/mcp.json **/claude_desktop_config.json'
+          fail-on: error
+      - uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: mcpcheck.sarif
 ```
 
-### Options
+What this does:
 
-```yaml
-- uses: MukundaKatta/mcp-validate-action@v1
-  with:
-    config-path: '**/{mcp,claude_desktop_config,.mcp}.json'  # default
-    strict: false            # fail on warnings too
-    fail-on-missing: false   # fail if no config files found
+1. Emits inline PR annotations via `::error`/`::warning` on the exact line of each offending field.
+2. Writes SARIF 2.1.0 so Code Scanning picks it up (Security tab + annotations that persist across PR updates).
+3. Fails the job based on `fail-on`.
+
+### Programmatic
+
+```ts
+import { checkSource, applyFixes } from "mcpcheck";
+
+const report = checkSource(json, "mcp.json");
+console.log(report.issues);
+
+const { output, applied } = applyFixes(json, report.issues);
+console.log(`Fixed ${applied.length} issue(s).`);
 ```
 
-### Outputs
+## Rules
 
-| Output | Description |
-|--------|-------------|
-| `files-checked` | Number of config files validated |
-| `errors` | Error count |
-| `warnings` | Warning count |
+| ID | Checks | Default severity | Autofix |
+|---|---|---|---|
+| `invalid-json` | File is not parseable JSON. | error | no |
+| `missing-transport` | Server must have `command` or `url`. | error | no |
+| `conflicting-transport` | Both `command` and `url` set, or `transport` disagrees. | error | no |
+| `invalid-command` | `command` missing or not a string. | error | no |
+| `invalid-args` | `args` is not an array of strings. | error | no |
+| `invalid-env` | `env` is not an object of strings. | error | no |
+| `hardcoded-secret` | Env value matches a known secret pattern (OpenAI, Anthropic, GitHub, Slack, AWS, Stripe, Azure, Google). | error | **yes** |
+| `invalid-url` | `url` is not valid, not http/https, or plain http to a non-local host. | error | no |
+| `invalid-transport` | `transport` is not `stdio`/`sse`/`streamable-http`. | error | no |
+| `unknown-field` | Server has a field not in the MCP schema. | warning | no |
+| `relative-path` | `command` starts with `./` or `../`. | warning | no |
+| `empty-servers` | Config has no `mcpServers` or `servers`. | warning | no |
+| `duplicate-server-name` | Two server names that differ only by case. | error | no |
+| `unstable-reference` | `npx <pkg>` / `uvx <pkg>` / `docker <img:latest>` without a pinned version. | warning | no |
 
-## Example output
+The `hardcoded-secret` rule recognises prefixes from every major provider (see [constants.ts](./src/rules/constants.ts)) and always proposes a fix: the value becomes `"${ENV_VAR}"`, which every MCP client expands from the caller's shell.
 
+## Configuration
+
+```json
+// mcpcheck.config.json
+{
+  "rules": {
+    "unknownField": { "severity": "off" },
+    "relativePath": { "severity": "error" },
+    "unstableReference": { "severity": "error" }
+  },
+  "plugins": ["@my-org/mcpcheck-custom-rules"]
+}
 ```
-✓ .mcp.json
-::group::examples/broken.json — 2 error(s), 1 warning(s)
-::error file=examples/broken.json::servers.leaky.env.KEY: looks like a hardcoded API key/secret
-::error file=examples/broken.json::servers.bad: must have either "command" or "url"
-::warning file=examples/broken.json::servers.local.command: relative path is fragile
-::endgroup::
 
-Checked 2 file(s): 2 error(s), 1 warning(s)
+Every rule accepts `{ "enabled": boolean, "severity": "error" | "warning" | "info" | "off" }`. Run with `--config mcpcheck.config.json`.
+
+## Plugins
+
+Plugins are npm packages that export `{ rules?: Rule[], premium?: (api) => void }`. See [src/plugins.ts](./src/plugins.ts). Example:
+
+```ts
+// @acme/mcpcheck-internal-rules
+import type { Plugin } from "mcpcheck";
+const plugin: Plugin = {
+  rules: [
+    // your Rule functions
+  ],
+};
+export default plugin;
 ```
+
+Then in `mcpcheck.config.json`: `{"plugins": ["@acme/mcpcheck-internal-rules"]}`.
+
+## Premium
+
+See [docs/PREMIUM.md](./docs/PREMIUM.md) for policy-as-code, hosted dashboard, and extra rule packs. The OSS core runs identically with or without a license; premium is an additive plugin layer.
+
+## Supported clients
+
+mcpcheck doesn't care which client reads the config, it only validates against the MCP protocol. Tested config layouts:
+
+| Client | Typical path |
+|---|---|
+| Claude Desktop | `~/Library/Application Support/Claude/claude_desktop_config.json` |
+| Cursor | `~/.cursor/mcp.json` and `<repo>/.cursor/mcp.json` |
+| Cline | `~/Library/Application Support/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json` |
+| Windsurf | `~/.codeium/windsurf/mcp_config.json` |
+| Zed | `~/.config/zed/settings.json` under `context_servers` |
+| Generic / in-repo | `mcp.json`, `.mcp.json` |
 
 ## Development
 
 ```bash
 npm install
-npm test       # run fixture tests
-npm run build  # bundle to dist/ via ncc
-```
-
-Before releasing a new version, run `npm run build` and commit `dist/` — GitHub Actions run from the bundled file.
-
-## Releasing
-
-```bash
 npm run build
-git add dist
-git commit -m "build: v0.1.1"
-git tag -a v0.1.1 -m "v0.1.1"
-git push && git push --tags
-git tag -f v1 && git push -f origin v1   # move rolling v1 tag
+npm test       # 18 passing
 ```
 
 ## License

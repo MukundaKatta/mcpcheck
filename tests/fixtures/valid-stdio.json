@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "everything": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-everything@1.0.0"]
+    },
+    "filesystem": {
+      "command": "/usr/local/bin/mcp-fs",
+      "args": ["/tmp/sandbox"],
+      "env": {
+        "LOG_LEVEL": "info"
+      }
+    }
+  }
+}

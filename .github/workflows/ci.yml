@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18, 20, 22]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Type-check
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm test
+
+  self-test:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install + build
+        run: |
+          npm install --no-audit --no-fund
+          npm run build
+
+      - name: Must-pass on valid fixtures
+        run: node dist/cli.js tests/fixtures/valid-stdio.json tests/fixtures/valid-http.json
+
+      - name: Must-fail on broken fixture
+        run: |
+          set +e
+          node dist/cli.js tests/fixtures/broken.json
+          code=$?
+          if [ $code -eq 0 ]; then
+            echo "Expected non-zero exit on broken.json, got $code"
+            exit 1
+          fi

@@ -1,25 +1,67 @@
 {
-  "name": "mcp-validate-action",
-  "version": "0.1.0",
-  "description": "GitHub Action to validate MCP (Model Context Protocol) config files",
-  "main": "src/index.js",
-  "scripts": {
-    "build": "ncc build src/index.js -o dist --source-map --license licenses.txt",
-    "test": "node test/test.js",
-    "lint": "eslint src"
+  "name": "mcpcheck",
+  "version": "1.0.0",
+  "description": "Validate MCP (Model Context Protocol) config files for Claude, Cursor, Cline, Windsurf, and Zed. CLI + GitHub Action with SARIF output.",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "mcpcheck": "dist/cli.js"
   },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc && chmod +x dist/cli.js",
+    "dev": "tsc -w",
+    "test": "tsx --test tests/**/*.test.ts",
+    "lint": "tsc --noEmit",
+    "prepublishOnly": "npm run build && npm test"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "claude",
+    "cursor",
+    "cline",
+    "windsurf",
+    "zed",
+    "linter",
+    "validator",
+    "github-action",
+    "cli",
+    "sarif"
+  ],
+  "author": "Mukunda Katta",
+  "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/MukundaKatta/mcp-validate-action.git"
+    "url": "https://github.com/MukundaKatta/mcpcheck.git"
   },
-  "keywords": ["github-actions", "mcp", "model-context-protocol", "validator", "claude", "anthropic"],
-  "author": "MukundaKatta",
-  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/MukundaKatta/mcpcheck/issues"
+  },
+  "homepage": "https://github.com/MukundaKatta/mcpcheck#readme",
   "dependencies": {
-    "@actions/core": "^1.10.1",
-    "glob": "^10.3.10"
+    "commander": "^12.1.0",
+    "globby": "^14.0.2",
+    "picocolors": "^1.1.1"
   },
   "devDependencies": {
-    "@vercel/ncc": "^0.38.1"
-  }
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "dist",
+    "action.yml",
+    "README.md",
+    "LICENSE"
+  ]
 }

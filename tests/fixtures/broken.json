@@ -1,0 +1,36 @@
+{
+  "mcpServers": {
+    "bad-no-transport": {
+      "env": { "FOO": "bar" }
+    },
+    "bad-both": {
+      "command": "npx",
+      "url": "https://example.com"
+    },
+    "leaky": {
+      "command": "node",
+      "args": ["server.js"],
+      "env": {
+        "OPENAI_API_KEY": "sk-proj-hardcoded12345678901234567890abc"
+      }
+    },
+    "plain-http-remote": {
+      "url": "http://api.example.com/mcp"
+    },
+    "bad-transport": {
+      "command": "npx",
+      "transport": "websocket"
+    },
+    "unpinned-npx": {
+      "command": "npx",
+      "args": ["-y", "@some-org/mcp-something"]
+    },
+    "relative": {
+      "command": "./scripts/run.sh"
+    },
+    "unknown": {
+      "command": "echo",
+      "typo_field": "oops"
+    }
+  }
+}
