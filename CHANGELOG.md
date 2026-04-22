@@ -8,6 +8,15 @@ uses [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **`mcpcheck scan-env`** — audits the current process's environment
+  against mcpcheck's secret-detection patterns. Prints matching var
+  names and the provider each one looks like; never prints values,
+  so output is safe to paste into an issue. Exit 1 on any match.
+- **`--format yaml`** — tree-structured, human-scannable YAML
+  serialisation of the run report. No external dep.
+- **3 more providers** — Shopify access tokens
+  (`shp(at|ca|pa|ss)_…`), Rollbar access tokens (context-scoped to
+  `ROLLBAR`), PagerDuty REST tokens (`u+…`).
 - **`mcpcheck audit <file...>`** — combined report: list-servers +
   stats + lint findings in one pass, one screen.
 - **New rule: `duplicate-image`** (warning) — two servers resolve

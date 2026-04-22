@@ -135,6 +135,12 @@ export const SECRET_PATTERNS: SecretPattern[] = [
   // Freshdesk uses a user-alnum followed by a fixed "X" or similar tail.
   // Narrow prefix + length; context-scope for safety.
   { name: "Freshdesk API key", re: /^[A-Za-z0-9]{20,40}$/, keyHint: /FRESHDESK/i },
+  // Shopify admin / custom-app access tokens — distinctive shpat_/shpca_ prefix.
+  { name: "Shopify access token", re: /^shp(at|ca|pa|ss)_[a-f0-9]{32}$/ },
+  // Rollbar access tokens — hex, scoped to ROLLBAR env names.
+  { name: "Rollbar access token", re: /^[a-f0-9]{32}$/, keyHint: /ROLLBAR/i },
+  // PagerDuty API keys — distinct `u+` prefix followed by alnum.
+  { name: "PagerDuty REST token", re: /^u\+[A-Za-z0-9_-]{20,}$/ },
   // Google Cloud service account keys are JSON blobs; people sometimes paste the
   // whole thing into a single env var value. Match on the private_key_id field,
   // which is always a 40-char hex string immediately preceded by that key name.

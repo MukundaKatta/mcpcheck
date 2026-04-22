@@ -30,6 +30,7 @@ import { formatMarkdown } from "./formatters/markdown.js";
 import { formatJunit } from "./formatters/junit.js";
 import { formatHtml } from "./formatters/html.js";
 import { formatCsv } from "./formatters/csv.js";
+import { formatYaml } from "./formatters/yaml.js";
 import { explainRule, listRuleIds } from "./rule-docs.js";
 import { runInit } from "./init.js";
 import { diffFiles } from "./diff.js";
@@ -54,7 +55,7 @@ import {
 } from "./transform.js";
 import type { Mcpcheckconfig, Rule, RunReport, FileReport } from "./types.js";
 
-type Format = "text" | "json" | "sarif" | "github" | "markdown" | "junit" | "html" | "csv";
+type Format = "text" | "json" | "sarif" | "github" | "markdown" | "junit" | "html" | "csv" | "yaml";
 
 interface CliOptions {
   config?: string;
@@ -206,6 +207,12 @@ async function main(): Promise<void> {
     process.stdout.write(text);
     process.exit(0);
   }
+  if (process.argv[2] === "scan-env") {
+    const { scanEnv, formatEnvScanText } = await import("./scan-env.js");
+    const hits = scanEnv();
+    process.stdout.write(formatEnvScanText(hits));
+    process.exit(hits.length > 0 ? 1 : 0);
+  }
   if (process.argv[2] === "audit") {
     await handleAudit(process.argv.slice(3));
     return;
@@ -259,7 +266,7 @@ async function main(): Promise<void> {
     )
     .argument("[inputs...]", "file paths or globs (defaults to common MCP config locations)")
     .option("-c, --config <path>", "mcpcheck config file")
-    .option("-f, --format <type>", "text | json | sarif | github | markdown | junit | html | csv", "text")
+    .option("-f, --format <type>", "text | json | sarif | github | markdown | junit | html | csv | yaml", "text")
     .option("--fix", "apply autofixes in place", false)
     .option("--fail-on <level>", "exit nonzero threshold: error | warning | info | never", "error")
     .option("-o, --output <path>", "write formatted output to a file")
@@ -1237,6 +1244,8 @@ function renderReport(fmt: Format, report: ReturnType<typeof checkFiles> extends
       return formatHtml(report);
     case "csv":
       return formatCsv(report);
+    case "yaml":
+      return formatYaml(report);
     default:
       return formatText(report);
   }

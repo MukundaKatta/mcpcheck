@@ -226,6 +226,9 @@ describe("checkSource - expanded secret providers", () => {
     ["DATABRICKS_TOKEN", "dapi" + "a".repeat(32), "Databricks access token"],
     ["BITBUCKET_APP_PASSWORD", "a".repeat(24), "Bitbucket app password"],
     ["FRESHDESK_API_KEY", "a".repeat(30), "Freshdesk API key"],
+    ["SHOPIFY_ACCESS_TOKEN", "shpat_" + "a".repeat(32), "Shopify access token"],
+    ["ROLLBAR_ACCESS_TOKEN", "a".repeat(32), "Rollbar access token"],
+    ["PAGERDUTY_TOKEN", "u+" + "a".repeat(24), "PagerDuty REST token"],
     // Synthetic value that matches the Discord regex (three dotted segments
     // of the right lengths) without looking like a real base64-encoded
     // snowflake id. We use uppercase placeholder runs so GitHub's secret
