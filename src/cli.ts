@@ -329,6 +329,11 @@ async function main(): Promise<void> {
       "auto"
     )
     .option("--no-color", "alias for --color=never")
+    .option(
+      "--github-summary",
+      "also append a markdown report to $GITHUB_STEP_SUMMARY when set",
+      false
+    )
     .version(readVersion(), "-v, --version")
     .addHelpText(
       "after",
@@ -559,6 +564,15 @@ async function main(): Promise<void> {
     await writeFile(opts.output, out, "utf8");
   } else {
     process.stdout.write(out + (opts.format === "text" ? "\n" : "\n"));
+  }
+  const ghSummary = (opts as unknown as { githubSummary?: boolean }).githubSummary;
+  if (ghSummary && process.env.GITHUB_STEP_SUMMARY) {
+    const { appendFile } = await import("node:fs/promises");
+    await appendFile(
+      process.env.GITHUB_STEP_SUMMARY,
+      formatMarkdown(viewReport) + "\n",
+      "utf8"
+    );
   }
 
   if (opts.watch) {

@@ -185,6 +185,26 @@ Plain-http local endpoints are handled separately by the \`invalid-url\` rule (h
 **Fix:** switch the URL scheme to https (or drop the credential header if the server really is open).`,
   },
   {
+    id: "url-embedded-credentials",
+    title: "URL with embedded credentials",
+    defaultSeverity: "error",
+    autofix: false,
+    summary: "`url: \"https://user:password@host/…\"` embeds RFC 3986 userinfo.",
+    details: `Embedded credentials end up in browser history, proxy access logs, and error traces. Worse than \`plaintext-http-with-token\`: not just cleartext on wire, cleartext in persistent storage.
+
+**Fix:** move the credential into a \`headers.Authorization\` with \`\${VAR}\` substitution; drop the userinfo from the URL.`,
+  },
+  {
+    id: "password-flag-literal",
+    title: "Credential flag in args with literal value",
+    defaultSeverity: "error",
+    autofix: false,
+    summary: "`args` contains `--password foo` / `--token xyz` / `--api-key abc` with a literal value (not `${VAR}`).",
+    details: `Catches the "I copied the CLI example" class of leak that \`secret-in-args\` misses: the literal value doesn't match a known provider's format, but the flag name makes it obvious what it is.
+
+**Fix:** move the credential into \`env\` with \`\${VAR}\`. Most tools accept \`$VAR\` in args or read an env var directly.`,
+  },
+  {
     id: "non-ascii-server-name",
     title: "Server name contains non-ASCII characters",
     defaultSeverity: "info",

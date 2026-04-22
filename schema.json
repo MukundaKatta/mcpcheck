@@ -229,6 +229,22 @@
             "enabled": true,
             "severity": "info"
           }
+        },
+        "urlEmbeddedCredentials": {
+          "$ref": "#/$defs/RuleConfig",
+          "description": "URL with embedded credentials — `url: \"https://user:password@host/…\"` embeds RFC 3986 userinfo.",
+          "default": {
+            "enabled": true,
+            "severity": "error"
+          }
+        },
+        "passwordFlagLiteral": {
+          "$ref": "#/$defs/RuleConfig",
+          "description": "Credential flag in args with literal value — `args` contains `--password foo` / `--token xyz` / `--api-key abc` with a literal value (not `${VAR}`).",
+          "default": {
+            "enabled": true,
+            "severity": "error"
+          }
         }
       }
     },

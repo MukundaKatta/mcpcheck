@@ -20,6 +20,8 @@ import { cwdNotAbsoluteRule } from "./cwd-not-absolute.js";
 import { secretInArgsRule } from "./secret-in-args.js";
 import { duplicateImageRule } from "./duplicate-image.js";
 import { nonAsciiServerNameRule } from "./non-ascii-server-name.js";
+import { urlEmbeddedCredsRule } from "./url-embedded-creds.js";
+import { passwordFlagLiteralRule } from "./password-flag-literal.js";
 
 export const BUILTIN_RULES: Rule[] = [
   structureRules,
@@ -43,4 +45,6 @@ export const BUILTIN_RULES: Rule[] = [
   secretInArgsRule,
   duplicateImageRule,
   nonAsciiServerNameRule,
+  urlEmbeddedCredsRule,
+  passwordFlagLiteralRule,
 ];

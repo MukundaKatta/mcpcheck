@@ -75,6 +75,8 @@ export interface RulesConfig {
   secretInArgs: RuleConfig;
   duplicateImage: RuleConfig;
   nonAsciiServerName: RuleConfig;
+  urlEmbeddedCredentials: RuleConfig;
+  passwordFlagLiteral: RuleConfig;
 }
 
 export interface Mcpcheckconfig {

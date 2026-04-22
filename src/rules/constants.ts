@@ -148,6 +148,9 @@ export const SECRET_PATTERNS: SecretPattern[] = [
     keyHint: /SNYK/i,
   },
   { name: "Railway API token", re: /^railway_[A-Za-z0-9]{40,}$/ },
+  { name: "Algolia admin API key", re: /^[a-f0-9]{32}$/i, keyHint: /ALGOLIA/i },
+  { name: "Cloudinary URL with credentials", re: /^cloudinary:\/\/\d{6,}:[A-Za-z0-9_-]{20,}@[A-Za-z0-9-]+$/ },
+  { name: "Stytch project secret", re: /^secret-(test|live)-[A-Za-z0-9=_-]{30,}$/ },
   // Google Cloud service account keys are JSON blobs; people sometimes paste the
   // whole thing into a single env var value. Match on the private_key_id field,
   // which is always a 40-char hex string immediately preceded by that key name.

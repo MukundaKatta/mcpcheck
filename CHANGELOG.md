@@ -8,6 +8,21 @@ uses [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **New rule: `url-embedded-credentials`** (error) — `url:
+  "https://user:pass@host"` leaks the credential into browser
+  history, proxy logs, and error traces. Worse than
+  `plaintext-http-with-token`: not just cleartext on wire, cleartext
+  in persistent storage.
+- **New rule: `password-flag-literal`** (error) — `args` contains
+  `--password foo` / `--token xyz` / `--api-key abc` with a literal
+  value (not `${VAR}`). Catches the "I copied the CLI example" leak
+  that `secret-in-args` misses when the value doesn't match a known
+  provider's format. 30 built-in rules.
+- **`--github-summary`** — appends a markdown report to
+  `$GITHUB_STEP_SUMMARY` when set.
+- **3 more providers** — Algolia admin keys (context-scoped to
+  `ALGOLIA`), Cloudinary URI with embedded credentials, Stytch
+  project secrets (`secret-(test|live)-…`).
 - **`mcpcheck score <file...>`** — one-line-per-file health score
   (0-100) with letter grade. -10 per error, -3 per warning, -1 per
   info. Averages across files. Exit 1 if any file < 60.

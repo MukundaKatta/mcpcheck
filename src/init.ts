@@ -62,7 +62,9 @@ const DEFAULT_CONFIG = `{
     "cwdNotAbsolute":        { "enabled": true,  "severity": "warning" },
     "secretInArgs":          { "enabled": true,  "severity": "error"   },
     "duplicateImage":        { "enabled": true,  "severity": "warning" },
-    "nonAsciiServerName":    { "enabled": true,  "severity": "info"    }
+    "nonAsciiServerName":    { "enabled": true,  "severity": "info"    },
+    "urlEmbeddedCredentials": { "enabled": true, "severity": "error"   },
+    "passwordFlagLiteral":   { "enabled": true,  "severity": "error"   }
   }
 }
 `;

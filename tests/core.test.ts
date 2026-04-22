@@ -232,6 +232,9 @@ describe("checkSource - expanded secret providers", () => {
     ["NEON_API_KEY", "npg_" + "a".repeat(40), "Neon API key"],
     ["SNYK_TOKEN", "12345678-1234-1234-1234-123456789abc", "Snyk API token"],
     ["RAILWAY_TOKEN", "railway_" + "a".repeat(44), "Railway API token"],
+    ["ALGOLIA_ADMIN_API_KEY", "a".repeat(32), "Algolia admin API key"],
+    ["CLOUDINARY_URL", "cloudinary://123456789012345:" + "a".repeat(30) + "@my-cloud", "Cloudinary URL with credentials"],
+    ["STYTCH_SECRET", "secret-test-" + "a".repeat(40), "Stytch project secret"],
     // Synthetic value that matches the Discord regex (three dotted segments
     // of the right lengths) without looking like a real base64-encoded
     // snowflake id. We use uppercase placeholder runs so GitHub's secret
