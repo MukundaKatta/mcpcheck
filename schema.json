@@ -221,6 +221,14 @@
             "enabled": true,
             "severity": "warning"
           }
+        },
+        "nonAsciiServerName": {
+          "$ref": "#/$defs/RuleConfig",
+          "description": "Server name contains non-ASCII characters — A server map key has characters outside basic ASCII.",
+          "default": {
+            "enabled": true,
+            "severity": "info"
+          }
         }
       }
     },

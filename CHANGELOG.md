@@ -8,6 +8,14 @@ uses [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **`mcpcheck score <file...>`** — one-line-per-file health score
+  (0-100) with letter grade. -10 per error, -3 per warning, -1 per
+  info. Averages across files. Exit 1 if any file < 60.
+- **New rule: `non-ascii-server-name`** (info) — server names with
+  non-ASCII chars (usually a pasted smart quote / nbsp); breaks
+  subtly in shells and URLs. 28 built-in rules.
+- **3 more providers** — Neon (`npg_…`), Snyk API tokens (UUID
+  shape, context-scoped to SNYK), Railway (`railway_…`).
 - **`mcpcheck scan-env`** — audits the current process's environment
   against mcpcheck's secret-detection patterns. Prints matching var
   names and the provider each one looks like; never prints values,

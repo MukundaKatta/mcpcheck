@@ -185,6 +185,16 @@ Plain-http local endpoints are handled separately by the \`invalid-url\` rule (h
 **Fix:** switch the URL scheme to https (or drop the credential header if the server really is open).`,
   },
   {
+    id: "non-ascii-server-name",
+    title: "Server name contains non-ASCII characters",
+    defaultSeverity: "info",
+    autofix: false,
+    summary: "A server map key has characters outside basic ASCII.",
+    details: `Usually a stray smart quote, nbsp, or emoji pasted during a rename. Works in the happy path but breaks subtly when the client URL-encodes, logs, or passes the name to a shell.
+
+**Fix:** rename to ASCII.`,
+  },
+  {
     id: "duplicate-image",
     title: "Two servers run the same docker image",
     defaultSeverity: "warning",

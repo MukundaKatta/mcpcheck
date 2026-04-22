@@ -141,6 +141,13 @@ export const SECRET_PATTERNS: SecretPattern[] = [
   { name: "Rollbar access token", re: /^[a-f0-9]{32}$/, keyHint: /ROLLBAR/i },
   // PagerDuty API keys — distinct `u+` prefix followed by alnum.
   { name: "PagerDuty REST token", re: /^u\+[A-Za-z0-9_-]{20,}$/ },
+  { name: "Neon API key", re: /^npg_[A-Za-z0-9]{30,}$/ },
+  {
+    name: "Snyk API token",
+    re: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+    keyHint: /SNYK/i,
+  },
+  { name: "Railway API token", re: /^railway_[A-Za-z0-9]{40,}$/ },
   // Google Cloud service account keys are JSON blobs; people sometimes paste the
   // whole thing into a single env var value. Match on the private_key_id field,
   // which is always a 40-char hex string immediately preceded by that key name.

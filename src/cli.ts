@@ -213,6 +213,10 @@ async function main(): Promise<void> {
     process.stdout.write(formatEnvScanText(hits));
     process.exit(hits.length > 0 ? 1 : 0);
   }
+  if (process.argv[2] === "score") {
+    await handleScore(process.argv.slice(3));
+    return;
+  }
   if (process.argv[2] === "audit") {
     await handleAudit(process.argv.slice(3));
     return;
@@ -738,6 +742,23 @@ function sortServerKeys(parsed: unknown): unknown {
     out[k] = v;
   }
   return out;
+}
+
+async function handleScore(argv: string[]): Promise<void> {
+  const files = argv.filter((a) => !a.startsWith("-"));
+  if (files.length === 0 || argv.includes("-h") || argv.includes("--help")) {
+    process.stderr.write(
+      "Usage: mcpcheck score <file...>\n" +
+        "Assigns each config a 0-100 score (letter-graded). One line per file.\n" +
+        "Exit 0 if every file scores >= 60, 1 otherwise.\n"
+    );
+    process.exit(files.length === 0 ? 2 : 0);
+  }
+  const { scoreReport, formatScoreText } = await import("./score.js");
+  const report = await checkFiles(files);
+  const scores = scoreReport(report);
+  process.stdout.write(formatScoreText(scores));
+  process.exit(scores.some((s) => s.score < 60) ? 1 : 0);
 }
 
 async function handleAudit(argv: string[]): Promise<void> {

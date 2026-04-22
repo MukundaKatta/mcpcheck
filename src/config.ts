@@ -28,6 +28,7 @@ export const DEFAULT_CONFIG: Mcpcheckconfig = {
     cwdNotAbsolute: { enabled: true, severity: "warning" },
     secretInArgs: { enabled: true, severity: "error" },
     duplicateImage: { enabled: true, severity: "warning" },
+    nonAsciiServerName: { enabled: true, severity: "info" },
   },
 };
 

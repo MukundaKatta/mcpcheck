@@ -30,6 +30,7 @@ This page is generated from `src/rule-docs.ts`. Don't edit it by hand.
 | [`unstable-reference`](#unstable-reference) | warning | no | `npx <pkg>` / `uvx <pkg>` / `docker run <image>` without a pinned version. |
 | [`http-without-auth`](#http-without-auth) | warning | no | A URL-transport server targets an https endpoint but declares no `Authorization` header. |
 | [`plaintext-http-with-token`](#plaintext-http-with-token) | error | no | The URL starts with `http://` (non-local) AND the server declares `Authorization` / `X-API-Key` / `Cookie` / similar. |
+| [`non-ascii-server-name`](#non-ascii-server-name) | info | no | A server map key has characters outside basic ASCII. |
 | [`duplicate-image`](#duplicate-image) | warning | no | Two server entries resolve to the same `docker run image:tag` reference. |
 | [`secret-in-args`](#secret-in-args) | error | no | A string in `args` matches a known API-key format. |
 | [`cwd-not-absolute`](#cwd-not-absolute) | warning | no | Server declares `cwd: "./foo"` / `cwd: "foo"`. |
@@ -253,6 +254,19 @@ The URL starts with `http://` (non-local) AND the server declares `Authorization
 That token rides over the wire in cleartext; any on-path attacker sees it. `invalid-url` warns about plain http to non-local hosts in general; this rule fires only on the unambiguously-bad case where a credential is also being sent.
 
 **Fix:** switch the URL scheme to https (or drop the credential header if the server really is open).
+
+## non-ascii-server-name
+
+**Server name contains non-ASCII characters**
+
+- Default severity: `info`
+- Autofix: no
+
+A server map key has characters outside basic ASCII.
+
+Usually a stray smart quote, nbsp, or emoji pasted during a rename. Works in the happy path but breaks subtly when the client URL-encodes, logs, or passes the name to a shell.
+
+**Fix:** rename to ASCII.
 
 ## duplicate-image
 

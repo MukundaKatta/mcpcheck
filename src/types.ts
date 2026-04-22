@@ -74,6 +74,7 @@ export interface RulesConfig {
   cwdNotAbsolute: RuleConfig;
   secretInArgs: RuleConfig;
   duplicateImage: RuleConfig;
+  nonAsciiServerName: RuleConfig;
 }
 
 export interface Mcpcheckconfig {

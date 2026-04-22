@@ -19,6 +19,7 @@ import { emptyEnvValueRule } from "./empty-env-value.js";
 import { cwdNotAbsoluteRule } from "./cwd-not-absolute.js";
 import { secretInArgsRule } from "./secret-in-args.js";
 import { duplicateImageRule } from "./duplicate-image.js";
+import { nonAsciiServerNameRule } from "./non-ascii-server-name.js";
 
 export const BUILTIN_RULES: Rule[] = [
   structureRules,
@@ -41,4 +42,5 @@ export const BUILTIN_RULES: Rule[] = [
   cwdNotAbsoluteRule,
   secretInArgsRule,
   duplicateImageRule,
+  nonAsciiServerNameRule,
 ];
