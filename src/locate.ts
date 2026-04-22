@@ -151,9 +151,16 @@ function skipWs(source: string, i: number): number {
       i += 1;
       continue;
     }
-    // single-line // comments — some MCP clients tolerate them
+    // JSONC line comments — Claude Desktop / Cursor / VS Code tolerate these.
     if (ch === "/" && source[i + 1] === "/") {
       while (i < source.length && source[i] !== "\n") i += 1;
+      continue;
+    }
+    // JSONC block comments.
+    if (ch === "/" && source[i + 1] === "*") {
+      i += 2;
+      while (i < source.length && !(source[i] === "*" && source[i + 1] === "/")) i += 1;
+      if (i < source.length) i += 2;
       continue;
     }
     break;

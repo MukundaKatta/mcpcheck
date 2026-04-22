@@ -1,0 +1,16 @@
+{
+  // Claude Desktop tolerates JSONC: line comments, block comments,
+  // and trailing commas. Before we added a JSONC pre-pass, this file
+  // would fail with invalid-json before any rule could run.
+  "mcpServers": {
+    /* filesystem server — pinned to 0.6.2 for reproducibility */
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem@0.6.2",
+        "/Users/me/Documents",
+      ],
+    },
+  },
+}

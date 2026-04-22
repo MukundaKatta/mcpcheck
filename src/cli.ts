@@ -11,6 +11,7 @@
 
 import { readFile, writeFile } from "node:fs/promises";
 import { readFileSync } from "node:fs";
+import { homedir } from "node:os";
 import { Command } from "commander";
 import { globby } from "globby";
 import pc from "picocolors";
@@ -35,7 +36,16 @@ interface CliOptions {
   output?: string;
 }
 
+/**
+ * Default inputs when no argument is given. We scan two places:
+ *
+ *   1. In-repo configs:    **\/mcp.json, **\/.mcp.json, **\/.cursor/mcp.json, etc.
+ *   2. Known per-user paths: Claude Desktop, Cursor, Cline, Windsurf, Zed,
+ *      Claude Code — one entry per client. These are absolute paths under the
+ *      user's home dir and are tilde-expanded in `expandInputs`.
+ */
 const DEFAULT_GLOBS = [
+  // repo-local configs
   "mcp.json",
   ".mcp.json",
   "**/mcp.json",
@@ -43,7 +53,23 @@ const DEFAULT_GLOBS = [
   "**/claude_desktop_config.json",
   "**/.cursor/mcp.json",
   "**/.cline/mcp.json",
+  "**/.claude/mcp.json",
+  "**/.codeium/windsurf/mcp_config.json",
+  // per-user configs (tilde-expanded on the fly)
+  "~/.claude.json",
+  "~/.cursor/mcp.json",
+  "~/.codeium/windsurf/mcp_config.json",
+  "~/.config/zed/settings.json",
+  "~/Library/Application Support/Claude/claude_desktop_config.json",
+  "~/.config/Claude/claude_desktop_config.json",
+  "~/AppData/Roaming/Claude/claude_desktop_config.json",
 ];
+
+function expandTilde(p: string): string {
+  if (p === "~") return homedir();
+  if (p.startsWith("~/") || p.startsWith("~\\")) return homedir() + p.slice(1);
+  return p;
+}
 
 async function main(): Promise<void> {
   const program = new Command()
@@ -111,15 +137,18 @@ async function loadPluginRules(config: Mcpcheckconfig): Promise<Rule[]> {
 
 async function expandInputs(inputs: string[]): Promise<string[]> {
   const out: string[] = [];
-  for (const input of inputs) {
-    // Try reading as an absolute/relative path first. This avoids globby's
-    // "path outside cwd" restriction for explicit filenames users pass.
+  for (const rawInput of inputs) {
+    const input = expandTilde(rawInput);
+    // Absolute/~-expanded paths: read directly. This skips globby's
+    // "path outside cwd" restriction and works for per-user configs.
     try {
       await readFile(input, "utf8");
       out.push(input);
       continue;
     } catch {
-      // Fall through to glob matching.
+      // Fall through to glob matching. If it contains no glob characters and
+      // isn't readable, it silently drops — that's fine, the default list
+      // includes several paths that only exist on some OSes/clients.
     }
     try {
       const matches = await globby(input, {

@@ -4,11 +4,13 @@
 [![CI](https://github.com/MukundaKatta/mcpcheck/actions/workflows/ci.yml/badge.svg)](https://github.com/MukundaKatta/mcpcheck/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 
-A linter for **MCP (Model Context Protocol)** config files. Works on every client that reads `mcp.json` / `.mcp.json` / `claude_desktop_config.json`: Claude Desktop, Cursor, Cline, Windsurf, Zed.
+A linter for **MCP (Model Context Protocol)** config files. Works on every client that reads `mcp.json` / `.mcp.json` / `claude_desktop_config.json` / Zed's `context_servers`: Claude Desktop, Claude Code, Cursor, Cline, Windsurf, Zed.
 
-- **CLI** — `mcpcheck` scans common config paths (or anything you glob at it).
+- **CLI** — `mcpcheck` auto-discovers configs for each client or lints anything you glob at it.
 - **GitHub Action** — inline PR annotations + SARIF for Code Scanning.
 - **Autofix** — replaces hardcoded secrets with `${VAR}` interpolation.
+- **Secret detection** — OpenAI, Anthropic, GitHub, Slack, AWS, Stripe, Google AI, and context-scoped Azure OpenAI keys.
+- **JSONC-tolerant** — comments and trailing commas are accepted, matching what Claude Desktop and Cursor actually parse.
 - **Programmatic API** — compose rules into your own pipeline.
 
 ```
@@ -35,6 +37,16 @@ Or one-off:
 
 ```bash
 npx mcpcheck
+```
+
+Or build from source:
+
+```bash
+git clone https://github.com/MukundaKatta/mcpcheck
+cd mcpcheck
+npm install
+npm run build
+node dist/cli.js        # same behavior as `mcpcheck`
 ```
 
 ## Usage
@@ -163,21 +175,24 @@ See [docs/PREMIUM.md](./docs/PREMIUM.md) for policy-as-code, hosted dashboard, a
 
 mcpcheck doesn't care which client reads the config, it only validates against the MCP protocol. Tested config layouts:
 
-| Client | Typical path |
-|---|---|
-| Claude Desktop | `~/Library/Application Support/Claude/claude_desktop_config.json` |
-| Cursor | `~/.cursor/mcp.json` and `<repo>/.cursor/mcp.json` |
-| Cline | `~/Library/Application Support/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json` |
-| Windsurf | `~/.codeium/windsurf/mcp_config.json` |
-| Zed | `~/.config/zed/settings.json` under `context_servers` |
-| Generic / in-repo | `mcp.json`, `.mcp.json` |
+| Client | Typical path | Top-level key |
+|---|---|---|
+| Claude Desktop | `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) / `%APPDATA%/Claude/claude_desktop_config.json` (Windows) / `~/.config/Claude/claude_desktop_config.json` (Linux) | `mcpServers` |
+| Claude Code | `~/.claude.json`, `<repo>/.mcp.json`, `<repo>/.claude/mcp.json` | `mcpServers` |
+| Cursor | `~/.cursor/mcp.json`, `<repo>/.cursor/mcp.json` | `mcpServers` |
+| Cline | `~/Library/Application Support/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json` | `mcpServers` |
+| Windsurf | `~/.codeium/windsurf/mcp_config.json` | `mcpServers` |
+| Zed | `~/.config/zed/settings.json` | `context_servers` |
+| Generic / in-repo | `mcp.json`, `.mcp.json` | `mcpServers` or `servers` |
+
+Running `mcpcheck` with no arguments scans every path in the table above, plus `**/mcp.json` / `**/.mcp.json` / `**/claude_desktop_config.json` in the current working directory.
 
 ## Development
 
 ```bash
 npm install
 npm run build
-npm test       # 18 passing
+npm test       # 25 passing
 ```
 
 ## License

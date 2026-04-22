@@ -50,8 +50,9 @@ export const envRules: Rule = (ctx) => {
       // If it references an env var already, skip secret detection.
       if (ENV_INTERPOLATION.test(value)) continue;
 
-      for (const { name: label, re } of SECRET_PATTERNS) {
+      for (const { name: label, re, keyHint } of SECRET_PATTERNS) {
         if (!re.test(value.trim())) continue;
+        if (keyHint && !keyHint.test(key)) continue;
         const rule = ctx.rules.hardcodedSecret;
         if (!rule.enabled || rule.severity === "off") break;
 

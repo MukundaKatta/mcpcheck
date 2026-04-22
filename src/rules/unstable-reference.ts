@@ -39,8 +39,38 @@ export const unstableReferenceRule: Rule = (ctx) => {
   return issues;
 };
 
+const DOCKER_SUBCOMMANDS = new Set([
+  "run",
+  "exec",
+  "pull",
+  "start",
+  "create",
+  "compose",
+]);
+
+/**
+ * Flags that take a value (either via `--flag value` or `-f value`). For
+ * `docker run` we skip over their values when hunting for the image argument.
+ * Conservative list: we'd rather miss a non-standard flag than misidentify
+ * its value as the image and emit a confusing false positive.
+ */
+const DOCKER_VALUE_FLAGS = new Set([
+  "-e", "--env",
+  "-v", "--volume",
+  "-p", "--publish",
+  "-w", "--workdir",
+  "-u", "--user",
+  "--name",
+  "--mount",
+  "--network",
+  "--platform",
+  "--entrypoint",
+  "--label",
+  "--add-host",
+  "--env-file",
+]);
+
 function detectUnstable(command: string, args: string[]): string | undefined {
-  const all = [command, ...args];
   if (command.endsWith("npx") || command === "npx") {
     const pkg = args.find((a) => !a.startsWith("-"));
     if (pkg && !/@[\d]/.test(pkg)) return `npx ${pkg}`;
@@ -50,10 +80,35 @@ function detectUnstable(command: string, args: string[]): string | undefined {
     if (pkg && !pkg.includes("==") && !pkg.includes("@")) return `uvx ${pkg}`;
   }
   if (command.endsWith("docker") || command === "docker") {
-    const image = args.find((a) => /^[a-z0-9][\w./-]*(:[a-z0-9][\w.-]*)?$/i.test(a) && !a.startsWith("-"));
+    const image = findDockerImage(args);
     if (image && (image.endsWith(":latest") || !image.includes(":"))) {
       return `docker ${image}`;
     }
+  }
+  return undefined;
+}
+
+/**
+ * Walk a `docker ...` argv and return the image reference, or undefined if we
+ * can't find one with confidence. We skip the subcommand, flags, and
+ * flag-values; the first remaining positional that looks like an image ref is
+ * the answer. If the first positional is itself an `=`-joined flag (for
+ * example `--env=FOO=bar`), skip it.
+ */
+function findDockerImage(args: string[]): string | undefined {
+  for (let i = 0; i < args.length; i += 1) {
+    const a = args[i]!;
+    if (DOCKER_SUBCOMMANDS.has(a)) continue;
+    if (a.startsWith("-")) {
+      if (a.includes("=")) continue;
+      if (DOCKER_VALUE_FLAGS.has(a)) i += 1;
+      continue;
+    }
+    // First bare positional. Must at least look like a container reference:
+    // registry/name[:tag] with no spaces. Reject if it looks like a CLI flag
+    // residue or an inline command.
+    if (/^[a-z0-9][\w./-]*(:[a-z0-9][\w.-]*)?$/i.test(a)) return a;
+    return undefined;
   }
   return undefined;
 }

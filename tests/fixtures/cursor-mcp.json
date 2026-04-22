@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "everything": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-everything@0.6.2"]
+    },
+    "remote-sse": {
+      "url": "https://example.com/mcp",
+      "transport": "sse"
+    }
+  }
+}

@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { mergeConfig } from "./config.js";
+import { parseJsonc } from "./jsonc.js";
 import { BUILTIN_RULES } from "./rules/index.js";
 import type {
   FileReport,
@@ -23,7 +24,7 @@ export function checkSource(source: string, file: string, opts: CheckOptions = {
   const config = mergeConfig(opts.config);
   let parsed: unknown;
   try {
-    parsed = JSON.parse(source);
+    parsed = parseJsonc(source);
   } catch (err) {
     return {
       file,

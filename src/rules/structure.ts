@@ -1,16 +1,18 @@
 import type { Rule } from "../types.js";
-import { serversKey, makeIssue } from "./helpers.js";
+import { SERVER_KEYS, serversKey, makeIssue } from "./helpers.js";
 
 /**
- * Top-level structural checks: "mcpServers" exists, it is an object, has
- * entries, and duplicate names (case-insensitive) are flagged.
+ * Top-level structural checks: the server map exists (under whichever of the
+ * supported keys the client uses), it is an object, has entries, and duplicate
+ * names (case-insensitive) are flagged.
  */
 export const structureRules: Rule = (ctx) => {
   const issues: ReturnType<Rule> = [];
   if (typeof ctx.config !== "object" || ctx.config === null) return issues;
 
   const c = ctx.config as Record<string, unknown>;
-  const raw = c.mcpServers ?? c.servers;
+  const presentKey = SERVER_KEYS.find((k) => k in c);
+  const raw = presentKey ? c[presentKey] : undefined;
   const key = serversKey(ctx.config);
 
   if (raw === undefined) {
@@ -19,7 +21,7 @@ export const structureRules: Rule = (ctx) => {
       issues.push(makeIssue({
         ruleId: "empty-servers",
         severity: rule.severity,
-        message: `Config has no "mcpServers" or "servers" key. Did you mean to add an MCP server?`,
+        message: `Config has no "${SERVER_KEYS.join('" / "')}" key. Did you mean to add an MCP server?`,
         jsonPath: "",
         source: ctx.source,
       }));
