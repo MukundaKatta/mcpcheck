@@ -98,6 +98,12 @@ export const SECRET_PATTERNS: SecretPattern[] = [
     re: /^[A-Za-z0-9]{32,}$/,
     keyHint: /AI21/i,
   },
+  // Intercom access tokens are a concatenation of 40+ alnum+underscore chars.
+  { name: "Intercom access token", re: /^[A-Za-z0-9_-]{60,}=$/, keyHint: /INTERCOM/i },
+  // Segment write keys are 32 chars alnum.
+  { name: "Segment write key", re: /^[A-Za-z0-9]{32}$/, keyHint: /SEGMENT/i },
+  // Retool personal tokens have a "retool_" prefix followed by alnum.
+  { name: "Retool access token", re: /^retool_[A-Za-z0-9_-]{24,}$/ },
   // Google Cloud service account keys are JSON blobs; people sometimes paste the
   // whole thing into a single env var value. Match on the private_key_id field,
   // which is always a 40-char hex string immediately preceded by that key name.

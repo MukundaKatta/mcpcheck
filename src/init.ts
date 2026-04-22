@@ -53,7 +53,8 @@ const DEFAULT_CONFIG = `{
     "httpWithoutAuth":       { "enabled": true,  "severity": "warning" },
     "duplicateEnvKey":       { "enabled": true,  "severity": "warning" },
     "shellMetachars":        { "enabled": true,  "severity": "error"   },
-    "typosquatPackage":      { "enabled": true,  "severity": "error"   }
+    "typosquatPackage":      { "enabled": true,  "severity": "error"   },
+    "emptyArgs":             { "enabled": true,  "severity": "warning" }
   }
 }
 `;

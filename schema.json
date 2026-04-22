@@ -157,6 +157,14 @@
             "enabled": true,
             "severity": "error"
           }
+        },
+        "emptyArgs": {
+          "$ref": "#/$defs/RuleConfig",
+          "description": "Package / container runner with empty args — A command that needs arguments (`npx` / `uvx` / `docker` / shells) has `args: []`.",
+          "default": {
+            "enabled": true,
+            "severity": "warning"
+          }
         }
       }
     },

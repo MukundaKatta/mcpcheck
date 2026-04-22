@@ -175,6 +175,16 @@ Plain-http local endpoints are handled separately by the \`invalid-url\` rule (h
 **Fix:** add a headers block with the substituted token, or disable the rule for this server if the endpoint really is open.`,
   },
   {
+    id: "empty-args",
+    title: "Package / container runner with empty args",
+    defaultSeverity: "warning",
+    autofix: false,
+    summary: "A command that needs arguments (`npx` / `uvx` / `docker` / shells) has `args: []`.",
+    details: `\`npx\` without a package, \`uvx\` without a package, \`docker\` without a subcommand, or \`bash\` without a script each exit with help text rather than running anything. Nine times in ten, \`args: []\` is a half-edited config — the user meant to add a package or subcommand and didn't.
+
+**Fix:** either fill in the missing args or remove the key entirely (omitting \`args\` is different from setting it to \`[]\`).`,
+  },
+  {
     id: "typosquat-package",
     title: "Package name looks like a typo of an official MCP server",
     defaultSeverity: "error",

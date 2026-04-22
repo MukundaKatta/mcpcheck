@@ -11,6 +11,7 @@ import { httpWithoutAuthRule } from "./http-without-auth.js";
 import { duplicateEnvKeyRule } from "./duplicate-env-key.js";
 import { shellMetacharsRule } from "./shell-metachars.js";
 import { typosquatRule } from "./typosquat.js";
+import { emptyArgsRule } from "./empty-args.js";
 
 export const BUILTIN_RULES: Rule[] = [
   structureRules,
@@ -25,4 +26,5 @@ export const BUILTIN_RULES: Rule[] = [
   duplicateEnvKeyRule,
   shellMetacharsRule,
   typosquatRule,
+  emptyArgsRule,
 ];

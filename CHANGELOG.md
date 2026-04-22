@@ -8,6 +8,18 @@ uses [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **CLI filter flags** — `--exclude-rule <id>` (repeatable),
+  `--only-rule <id>` (repeatable), and `--only-fixable` drop matching
+  issues before formatting and exit-code evaluation. Lets CI pipelines
+  gate on a specific rule, or a security-focused team drop informational
+  findings without touching mcpcheck.config.json.
+- **New rule: `empty-args`** (warning) — `npx`/`uvx`/`docker`/shell
+  commands with `args: []` get flagged. Almost always a half-edited
+  config where the package name or subcommand was dropped. 20
+  built-in rules now.
+- **3 more secret providers** — Intercom access tokens
+  (context-scoped), Segment write keys (context-scoped), Retool
+  access tokens (`retool_…`).
 - **`mcpcheck pipe`** — reads a config from stdin, lints it, writes the
   formatted report to stdout. All formatters work. Exits 1 on any
   error finding. `git show HEAD:mcp.json | mcpcheck pipe --format json`

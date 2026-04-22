@@ -71,6 +71,9 @@ interface CliOptions {
   profile?: string;
   printConfig: boolean;
   diffOnly?: string;
+  excludeRule?: string[];
+  onlyRule?: string[];
+  onlyFixable: boolean;
 }
 
 const DEFAULT_BASELINE_PATH = ".mcpcheck.baseline.json";
@@ -252,6 +255,17 @@ async function main(): Promise<void> {
       "--diff-only [base]",
       "lint only files changed vs base (default: HEAD). Uses `git diff --name-only`."
     )
+    .option(
+      "--exclude-rule <id>",
+      "suppress issues for this rule (repeatable)",
+      (val: string, prev: string[] = []) => [...prev, val]
+    )
+    .option(
+      "--only-rule <id>",
+      "only report issues for this rule (repeatable)",
+      (val: string, prev: string[] = []) => [...prev, val]
+    )
+    .option("--only-fixable", "only report issues that have an autofix", false)
     .version(readVersion(), "-v, --version")
     .addHelpText(
       "after",
@@ -434,6 +448,16 @@ async function main(): Promise<void> {
     }
   }
 
+  // Apply rule-filter flags before any formatting. These affect exit-code
+  // thresholding too, so callers doing `mcpcheck --exclude-rule foo --fail-on
+  // error` really don't fail on suppressed findings.
+  if (
+    (opts.excludeRule && opts.excludeRule.length > 0) ||
+    (opts.onlyRule && opts.onlyRule.length > 0) ||
+    opts.onlyFixable
+  ) {
+    applyRuleFilters(report, opts);
+  }
   const viewReport = opts.quiet && opts.format === "text" ? filterQuiet(report) : report;
   const out = renderReport(opts.format, viewReport);
   if (opts.output) {
@@ -503,6 +527,34 @@ async function startWatch(
 function filterQuiet(report: RunReport): RunReport {
   const files: FileReport[] = report.files.filter((f) => f.issues.length > 0);
   return { ...report, files };
+}
+
+/**
+ * In-place mutation: drop issues matching the exclude list, keep only those
+ * matching the include list (if set), keep only fixable (if set). Recomputes
+ * aggregate counts so exit-code logic reflects the filtered view.
+ */
+function applyRuleFilters(report: RunReport, opts: CliOptions): void {
+  const exclude = new Set(opts.excludeRule ?? []);
+  const onlySet = opts.onlyRule && opts.onlyRule.length > 0 ? new Set(opts.onlyRule) : undefined;
+  for (const f of report.files) {
+    f.issues = f.issues.filter((i) => {
+      if (exclude.has(i.ruleId)) return false;
+      if (onlySet && !onlySet.has(i.ruleId)) return false;
+      if (opts.onlyFixable && !i.fix) return false;
+      return true;
+    });
+  }
+  report.errorCount = 0;
+  report.warningCount = 0;
+  report.infoCount = 0;
+  for (const f of report.files) {
+    for (const i of f.issues) {
+      if (i.severity === "error") report.errorCount += 1;
+      else if (i.severity === "warning") report.warningCount += 1;
+      else if (i.severity === "info") report.infoCount += 1;
+    }
+  }
 }
 
 async function handlePipe(argv: string[]): Promise<void> {

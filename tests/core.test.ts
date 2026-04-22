@@ -210,6 +210,9 @@ describe("checkSource - expanded secret providers", () => {
     ["OPENAI_SESSION_TOKEN", "sess-" + "a".repeat(44), "OpenAI session token"],
     ["COHERE_API_KEY", "a".repeat(40), "Cohere API key"],
     ["AI21_API_KEY", "a".repeat(40), "AI21 Labs API key"],
+    ["INTERCOM_ACCESS_TOKEN", "a".repeat(60) + "=", "Intercom access token"],
+    ["SEGMENT_WRITE_KEY", "a".repeat(32), "Segment write key"],
+    ["RETOOL_TOKEN", "retool_" + "a".repeat(30), "Retool access token"],
     // Synthetic value that matches the Discord regex (three dotted segments
     // of the right lengths) without looking like a real base64-encoded
     // snowflake id. We use uppercase placeholder runs so GitHub's secret

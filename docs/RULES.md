@@ -29,6 +29,7 @@ This page is generated from `src/rule-docs.ts`. Don't edit it by hand.
 | [`duplicate-server-name`](#duplicate-server-name) | error | no | Two server entries differ only by case. |
 | [`unstable-reference`](#unstable-reference) | warning | no | `npx <pkg>` / `uvx <pkg>` / `docker run <image>` without a pinned version. |
 | [`http-without-auth`](#http-without-auth) | warning | no | A URL-transport server targets an https endpoint but declares no `Authorization` header. |
+| [`empty-args`](#empty-args) | warning | no | A command that needs arguments (`npx` / `uvx` / `docker` / shells) has `args: []`. |
 | [`typosquat-package`](#typosquat-package) | error | no | An `npx` / `uvx` package name is within edit distance 3 of an official `@modelcontextprotocol/*` server but doesn't match it. |
 | [`shell-metachars`](#shell-metachars) | error | no | `command` contains `\|`, `;`, `$(…)`, backticks, `&&`, `\|\|`, `&`, or `$VAR` but isn't a shell. |
 | [`duplicate-env-key`](#duplicate-env-key) | warning | no | Two entries in `env` differ only by case (e.g. `API_KEY` and `ApiKey`). |
@@ -232,6 +233,19 @@ Most remote MCP servers require a bearer token or similar auth. A config with an
 Plain-http local endpoints are handled separately by the `invalid-url` rule (http to non-localhost is already flagged). Real public no-auth endpoints exist — mock servers, open-data servers — so this defaults to warning rather than error.
 
 **Fix:** add a headers block with the substituted token, or disable the rule for this server if the endpoint really is open.
+
+## empty-args
+
+**Package / container runner with empty args**
+
+- Default severity: `warning`
+- Autofix: no
+
+A command that needs arguments (`npx` / `uvx` / `docker` / shells) has `args: []`.
+
+`npx` without a package, `uvx` without a package, `docker` without a subcommand, or `bash` without a script each exit with help text rather than running anything. Nine times in ten, `args: []` is a half-edited config — the user meant to add a package or subcommand and didn't.
+
+**Fix:** either fill in the missing args or remove the key entirely (omitting `args` is different from setting it to `[]`).
 
 ## typosquat-package
 

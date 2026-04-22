@@ -66,6 +66,7 @@ export interface RulesConfig {
   duplicateEnvKey: RuleConfig;
   shellMetachars: RuleConfig;
   typosquatPackage: RuleConfig;
+  emptyArgs: RuleConfig;
 }
 
 export interface Mcpcheckconfig {
