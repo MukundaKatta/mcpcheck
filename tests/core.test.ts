@@ -389,6 +389,68 @@ describe("formatters (markdown, junit)", () => {
   });
 });
 
+describe("baseline mode", () => {
+  it("buildBaseline captures ruleId + jsonPath but not message", async () => {
+    const { buildBaseline } = await import("../src/baseline.js");
+    const baseline = buildBaseline([
+      {
+        file: "a.json",
+        fatal: false,
+        issues: [
+          { ruleId: "r1", severity: "error", message: "version 1", jsonPath: "x" },
+        ],
+      },
+    ]);
+    assert.equal(baseline.version, 1);
+    assert.equal(baseline.entries.length, 1);
+    assert.deepEqual(
+      { file: baseline.entries[0]!.file, ruleId: baseline.entries[0]!.ruleId, jsonPath: baseline.entries[0]!.jsonPath },
+      { file: "a.json", ruleId: "r1", jsonPath: "x" }
+    );
+  });
+
+  it("applyBaseline keeps new issues and counts suppressed ones", async () => {
+    const { applyBaseline, entryKey } = await import("../src/baseline.js");
+    const baseline = new Set<string>([entryKey("a.json", "r1", "x")]);
+    const out = applyBaseline(
+      [
+        {
+          file: "a.json",
+          fatal: false,
+          issues: [
+            { ruleId: "r1", severity: "error", message: "pre-existing", jsonPath: "x" },
+            { ruleId: "r2", severity: "warning", message: "new finding", jsonPath: "y" },
+          ],
+        },
+      ],
+      baseline
+    );
+    assert.equal(out.suppressed, 1);
+    assert.equal(out.files[0]!.issues.length, 1);
+    assert.equal(out.files[0]!.issues[0]!.ruleId, "r2");
+  });
+
+  it("applyBaseline is robust to messages changing between runs", async () => {
+    const { applyBaseline, entryKey } = await import("../src/baseline.js");
+    const baseline = new Set<string>([entryKey("a.json", "r1", "x")]);
+    const out = applyBaseline(
+      [
+        {
+          file: "a.json",
+          fatal: false,
+          issues: [
+            { ruleId: "r1", severity: "error", message: "slightly reworded", jsonPath: "x" },
+          ],
+        },
+      ],
+      baseline
+    );
+    // Same rule+path, different message — still suppressed.
+    assert.equal(out.suppressed, 1);
+    assert.equal(out.files[0]!.issues.length, 0);
+  });
+});
+
 describe("mcpcheck doctor", () => {
   it("formats the table and picks a sane exit code", async () => {
     const { formatDoctorText, doctorExitCode } = await import("../src/doctor.js");

@@ -8,6 +8,20 @@ uses [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **`mcpcheck --baseline` / `--baseline-write`** — adopt mcpcheck on a
+  codebase with existing issues without asking the team to fix
+  everything at once. `--baseline-write` snapshots today's issues to
+  `.mcpcheck.baseline.json` (or a custom path). `--baseline` suppresses
+  everything already in that file, so CI only fails on new issues. Keyed
+  by `(file, ruleId, jsonPath)` — rewording a diagnostic's message won't
+  invalidate your baseline, but renaming a server will (and that's
+  correct; the finding is genuinely different).
+- **OSS hygiene** — `SECURITY.md` (private advisory workflow, scope,
+  non-secret-test-fixture note), `CONTRIBUTING.md` (dev setup,
+  per-subpackage lifecycle, PR checklist, commit style), and
+  `.github/ISSUE_TEMPLATE/{bug_report,feature_request,config}.yml`
+  (structured issue forms + contact-links to the playground and
+  SECURITY advisory flow).
 - **VS Code snippets** — six ready-to-expand snippets for common MCP
   server shapes: filesystem (pinned npx), GitHub (docker + env
   substitution), stdio with env, remote SSE endpoint, uvx Python, and

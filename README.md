@@ -81,6 +81,8 @@ mcpcheck --explain hardcoded-secret          # print docs for one rule
 mcpcheck --list-rules                        # list every built-in rule id
 mcpcheck init                                # scaffold mcpcheck.config.json + CI
 mcpcheck diff a.json b.json                  # show which issues changed between two configs
+mcpcheck --baseline-write                    # snapshot today's issues
+mcpcheck --baseline                          # in CI: fail only on new issues
 ```
 
 | Flag | Purpose |

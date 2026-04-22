@@ -1,0 +1,43 @@
+name: Feature request
+description: Propose a new rule, flag, provider pattern, or anything else
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Feature requests are most useful when they include the problem they
+        solve. "I'd like mcpcheck to do X" lands faster when paired with "so
+        that I can Y" and a concrete example.
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of feature
+      options:
+        - New rule (with a specific failure case in mind)
+        - New secret-provider pattern
+        - CLI flag / subcommand
+        - Editor / IDE integration
+        - New output format
+        - Plugin / extension improvement
+        - Docs / examples
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What are you trying to do? What's blocking you today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behaviour
+      description: If you already have a rough design, describe it here. If not, that's fine too.
+  - type: textarea
+    id: example
+    attributes:
+      label: Example input / output
+      description: Where helpful, paste a config fragment that should trigger the new feature.
+      render: json

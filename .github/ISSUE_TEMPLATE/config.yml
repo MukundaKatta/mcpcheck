@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/MukundaKatta/mcpcheck/security/advisories/new
+    about: Please report security issues privately — not as GitHub issues.
+  - name: Rule documentation
+    url: https://github.com/MukundaKatta/mcpcheck/blob/main/docs/RULES.md
+    about: Every built-in rule is documented here with examples.
+  - name: Try the playground
+    url: https://mukundakatta.github.io/mcpcheck/
+    about: Paste a config, see diagnostics live in your browser.

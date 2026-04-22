@@ -1,0 +1,68 @@
+name: Bug report
+description: mcpcheck did the wrong thing — false positive, false negative, or a crash
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing. A small reproducible example beats a long description.
+        Before you submit, please **redact any real secrets** in the config you paste.
+  - type: input
+    id: version
+    attributes:
+      label: mcpcheck version
+      description: Output of `mcpcheck --version`.
+      placeholder: "1.0.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Surface
+      description: Where did you hit this?
+      options:
+        - CLI (`mcpcheck ...`)
+        - VS Code extension
+        - GitHub Action
+        - Docker image
+        - Programmatic (`import { checkSource } from "mcpcheck"`)
+        - Playground
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: config
+    attributes:
+      label: Minimum config that reproduces
+      description: Paste the smallest MCP config that triggers the bug. Redact secrets.
+      render: json
+      placeholder: |
+        {
+          "mcpServers": {
+            "demo": { "command": "npx", "args": ["-y", "@org/pkg@1.0.0"] }
+          }
+        }
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command / invocation
+      description: Exact CLI you ran, or the VS Code action you took.
+      render: bash
+      placeholder: "mcpcheck mcp.json --fail-on warning"
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+      description: Include exit code and any diagnostic output.
+    validations:
+      required: true

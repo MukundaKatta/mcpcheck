@@ -32,6 +32,11 @@ import { runInit } from "./init.js";
 import { diffFiles } from "./diff.js";
 import { statsFromFile, formatStatsText } from "./stats.js";
 import { runDoctor, formatDoctorText, doctorExitCode } from "./doctor.js";
+import {
+  applyBaseline,
+  loadBaseline,
+  writeBaseline,
+} from "./baseline.js";
 import type { Mcpcheckconfig, Rule, RunReport, FileReport } from "./types.js";
 
 type Format = "text" | "json" | "sarif" | "github" | "markdown" | "junit";
@@ -46,7 +51,11 @@ interface CliOptions {
   listRules?: boolean;
   quiet: boolean;
   client?: string;
+  baseline?: string;
+  baselineWrite?: boolean;
 }
+
+const DEFAULT_BASELINE_PATH = ".mcpcheck.baseline.json";
 
 /**
  * Default inputs when no argument is given. We scan two places:
@@ -159,6 +168,14 @@ async function main(): Promise<void> {
     )
     .option("--explain <rule-id>", "print docs for a rule and exit")
     .option("--list-rules", "list all rule ids and exit", false)
+    .option(
+      "--baseline [path]",
+      `suppress every issue already present in the baseline file (default: ${DEFAULT_BASELINE_PATH})`
+    )
+    .option(
+      "--baseline-write [path]",
+      `write the current issues as a baseline and exit 0 (default: ${DEFAULT_BASELINE_PATH})`
+    )
     .version(readVersion(), "-v, --version")
     .addHelpText(
       "after",
@@ -175,6 +192,8 @@ async function main(): Promise<void> {
         "  mcpcheck diff a.json b.json                  show which issues changed between two configs",
         "  mcpcheck doctor                              per-client health summary across installed MCP clients",
         "  mcpcheck stats path.json                     inventory summary of an MCP config",
+        "  mcpcheck --baseline-write                    snapshot today's issues as .mcpcheck.baseline.json",
+        "  mcpcheck --baseline                          fail only on new issues (respects --baseline-write output)",
       ].join("\n")
     )
     .parse(process.argv);
@@ -223,6 +242,53 @@ async function main(): Promise<void> {
   }
 
   const report = await checkFiles(files, { config, extraRules });
+
+  if (opts.baselineWrite !== undefined) {
+    const path =
+      typeof opts.baselineWrite === "string" ? opts.baselineWrite : DEFAULT_BASELINE_PATH;
+    const n = await writeBaseline(path, report.files);
+    process.stderr.write(
+      pc.green(`[baseline] wrote ${n} issue(s) to ${path}\n`)
+    );
+    process.exit(0);
+  }
+
+  let suppressedByBaseline = 0;
+  if (opts.baseline !== undefined) {
+    const path =
+      typeof opts.baseline === "string" ? opts.baseline : DEFAULT_BASELINE_PATH;
+    const baseline = await loadBaseline(path);
+    if (!baseline) {
+      process.stderr.write(
+        pc.yellow(
+          `[baseline] no baseline found at ${path}; running as if --baseline weren't set. Use --baseline-write to create one.\n`
+        )
+      );
+    } else {
+      const { files: filtered, suppressed } = applyBaseline(report.files, baseline);
+      report.files = filtered;
+      suppressedByBaseline = suppressed;
+      // Counts need to reflect what we still report.
+      report.errorCount = filtered.reduce(
+        (n, f) => n + f.issues.filter((i) => i.severity === "error").length,
+        0
+      );
+      report.warningCount = filtered.reduce(
+        (n, f) => n + f.issues.filter((i) => i.severity === "warning").length,
+        0
+      );
+      report.infoCount = filtered.reduce(
+        (n, f) => n + f.issues.filter((i) => i.severity === "info").length,
+        0
+      );
+      if (suppressed > 0) {
+        process.stderr.write(
+          pc.dim(`[baseline] suppressed ${suppressed} pre-existing issue(s)\n`)
+        );
+      }
+    }
+  }
+  void suppressedByBaseline;
 
   if (opts.fix) {
     for (const file of report.files) {
