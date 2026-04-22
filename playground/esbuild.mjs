@@ -35,6 +35,9 @@ const options = {
 function copyStatics() {
   cpSync("public/index.html", "dist/index.html");
   cpSync("public/styles.css", "dist/styles.css");
+  // Mirror the repo-root JSON schema so the playground URL can double as a
+  // stable schema host (mukundakatta.github.io/mcpcheck/schema.json).
+  cpSync("../schema.json", "dist/schema.json");
 }
 
 if (watch) {

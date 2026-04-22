@@ -34,7 +34,7 @@ const CONFIG_FILENAME = "mcpcheck.config.json";
 const WORKFLOW_PATH = ".github/workflows/mcpcheck.yml";
 
 const DEFAULT_CONFIG = `{
-  "$schema": "https://mcpcheck.dev/schema.json",
+  "$schema": "https://raw.githubusercontent.com/MukundaKatta/mcpcheck/main/schema.json",
   "rules": {
     "missingTransport":      { "enabled": true,  "severity": "error"   },
     "conflictingTransport":  { "enabled": true,  "severity": "error"   },

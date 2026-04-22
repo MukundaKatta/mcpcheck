@@ -170,6 +170,7 @@ The `hardcoded-secret` rule recognises prefixes from every major provider (see [
 ```json
 // mcpcheck.config.json
 {
+  "$schema": "https://raw.githubusercontent.com/MukundaKatta/mcpcheck/main/schema.json",
   "rules": {
     "unknownField": { "severity": "off" },
     "relativePath": { "severity": "error" },
@@ -180,6 +181,8 @@ The `hardcoded-secret` rule recognises prefixes from every major provider (see [
 ```
 
 Every rule accepts `{ "enabled": boolean, "severity": "error" | "warning" | "info" | "off" }`. Run with `--config mcpcheck.config.json`.
+
+The `$schema` pointer gives you autocomplete and inline validation in any editor that understands JSON Schema (VS Code, JetBrains, Neovim with `jsonls`). The VS Code extension also registers the schema for any file named `mcpcheck.config.json` or `.mcpcheck.json` automatically.
 
 ## Plugins
 

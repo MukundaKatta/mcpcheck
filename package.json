@@ -25,7 +25,9 @@
     "lint": "tsc --noEmit",
     "docs:gen": "node scripts/gen-rules-md.mjs",
     "docs:check": "node scripts/gen-rules-md.mjs && git diff --exit-code -- docs/RULES.md",
-    "prepublishOnly": "npm run build && npm test && npm run docs:check"
+    "schema:gen": "node scripts/gen-schema.mjs",
+    "schema:check": "node scripts/gen-schema.mjs && git diff --exit-code -- schema.json",
+    "prepublishOnly": "npm run build && npm test && npm run docs:check && npm run schema:check"
   },
   "keywords": [
     "mcp",
@@ -67,6 +69,7 @@
   "files": [
     "dist",
     "action.yml",
+    "schema.json",
     "README.md",
     "CHANGELOG.md",
     "LICENSE"

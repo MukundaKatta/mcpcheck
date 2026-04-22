@@ -8,6 +8,17 @@ uses [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **JSON Schema for `mcpcheck.config.json`** — a generated `schema.json`
+  (committed at the repo root and also served by the playground at
+  `schema.json`) gives autocomplete, inline validation, and rule
+  descriptions in every editor that understands JSON Schema (VS Code,
+  JetBrains, Neovim with jsonls). `mcpcheck init`-generated configs ship
+  with a matching `$schema` pointer. The VS Code extension registers the
+  schema via `contributes.jsonValidation` so it applies automatically to
+  `mcpcheck.config.json` / `.mcpcheck.json` even without `$schema`. New
+  `npm run schema:gen` / `schema:check` scripts keep the schema in sync
+  with `RulesConfig`; CI and `prepublishOnly` refuse to land a change that
+  drifts.
 - **Web playground** — `playground/` ships a static site that lints an MCP
   config live in the browser. Paste / type a config, see diagnostics with
   precise line numbers and clickable rule-id code links, hit "Fix all" to

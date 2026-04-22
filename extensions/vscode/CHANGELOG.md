@@ -19,3 +19,6 @@ All notable changes to the mcpcheck VS Code extension.
 - `mcpcheck.runOn` setting (`onType` / `onSave`).
 - Every diagnostic is linked to its rule documentation via a clickable
   rule-id code link.
+- JSON Schema for `mcpcheck.config.json` and `.mcpcheck.json` is
+  contributed via `jsonValidation`, giving autocomplete, inline errors,
+  and rule descriptions while editing the config.

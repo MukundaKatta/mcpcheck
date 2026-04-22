@@ -1,0 +1,175 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/MukundaKatta/mcpcheck/main/schema.json",
+  "title": "mcpcheck configuration",
+  "description": "Configuration for the mcpcheck linter. See https://github.com/MukundaKatta/mcpcheck",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "rules": {
+      "type": "object",
+      "description": "Per-rule enablement and severity. Omitted rules keep their defaults.",
+      "additionalProperties": false,
+      "properties": {
+        "missingTransport": {
+          "$ref": "#/$defs/RuleConfig",
+          "description": "Server has no transport — A server entry has neither `command` (stdio) nor `url` (http/sse).",
+          "default": {
+            "enabled": true,
+            "severity": "error"
+          }
+        },
+        "conflictingTransport": {
+          "$ref": "#/$defs/RuleConfig",
+          "description": "Transport fields contradict each other — Both `command` and `url` are set, or `transport` disagrees with them.",
+          "default": {
+            "enabled": true,
+            "severity": "error"
+          }
+        },
+        "invalidCommand": {
+          "$ref": "#/$defs/RuleConfig",
+          "description": "`command` is missing or not a string — `command` must be a non-empty string.",
+          "default": {
+            "enabled": true,
+            "severity": "error"
+          }
+        },
+        "invalidArgs": {
+          "$ref": "#/$defs/RuleConfig",
+          "description": "`args` is not an array of strings — `args` has to be an array of strings.",
+          "default": {
+            "enabled": true,
+            "severity": "error"
+          }
+        },
+        "invalidEnv": {
+          "$ref": "#/$defs/RuleConfig",
+          "description": "`env` is not a string-valued object — `env` must be an object, and each value must be a string.",
+          "default": {
+            "enabled": true,
+            "severity": "error"
+          }
+        },
+        "hardcodedSecret": {
+          "$ref": "#/$defs/RuleConfig",
+          "description": "Hardcoded API key — A value in `env` matches a known secret format (OpenAI, Anthropic, GitHub, AWS, Stripe, Twilio, SendGrid, HuggingFace, npm, GitLab, Slack, Azure, Google).",
+          "default": {
+            "enabled": true,
+            "severity": "error"
+          }
+        },
+        "invalidUrl": {
+          "$ref": "#/$defs/RuleConfig",
+          "description": "URL is malformed, non-http(s), or insecure — `url` does not parse, isn't http/https, or is plain http to a non-local host.",
+          "default": {
+            "enabled": true,
+            "severity": "error"
+          }
+        },
+        "invalidTransport": {
+          "$ref": "#/$defs/RuleConfig",
+          "description": "`transport` value is not one of the accepted tokens — `transport` must be one of `stdio`, `sse`, `streamable-http`.",
+          "default": {
+            "enabled": true,
+            "severity": "error"
+          }
+        },
+        "unknownField": {
+          "$ref": "#/$defs/RuleConfig",
+          "description": "Unknown field on a server — A field on the server object isn't in the MCP schema.",
+          "default": {
+            "enabled": true,
+            "severity": "warning"
+          }
+        },
+        "relativePath": {
+          "$ref": "#/$defs/RuleConfig",
+          "description": "`command` starts with `./` or `../` — The command is a relative path.",
+          "default": {
+            "enabled": true,
+            "severity": "warning"
+          }
+        },
+        "emptyServers": {
+          "$ref": "#/$defs/RuleConfig",
+          "description": "Config has no server entries — No `mcpServers` / `servers` / `context_servers` key, or it is empty.",
+          "default": {
+            "enabled": true,
+            "severity": "warning"
+          }
+        },
+        "duplicateServerName": {
+          "$ref": "#/$defs/RuleConfig",
+          "description": "Case-insensitive duplicate server name — Two server entries differ only by case.",
+          "default": {
+            "enabled": true,
+            "severity": "error"
+          }
+        },
+        "unstableReference": {
+          "$ref": "#/$defs/RuleConfig",
+          "description": "Unpinned package or image reference — `npx <pkg>` / `uvx <pkg>` / `docker run <image>` without a pinned version.",
+          "default": {
+            "enabled": true,
+            "severity": "warning"
+          }
+        },
+        "dangerousCommand": {
+          "$ref": "#/$defs/RuleConfig",
+          "description": "Privilege escalation, remote-shell pipe, or host-root mount — Config instructs the client to execute `curl | sh`, `sudo`, `docker --privileged`, `-v /:/`, or similar.",
+          "default": {
+            "enabled": true,
+            "severity": "error"
+          }
+        }
+      }
+    },
+    "include": {
+      "type": "array",
+      "description": "Extra glob patterns to treat as MCP configs.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "exclude": {
+      "type": "array",
+      "description": "Glob patterns to ignore.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "plugins": {
+      "type": "array",
+      "description": "npm package names implementing the `Plugin` interface exported from `mcpcheck`.",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "$defs": {
+    "RuleConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Turn the rule on or off entirely."
+        },
+        "severity": {
+          "enum": [
+            "error",
+            "warning",
+            "info",
+            "off"
+          ],
+          "description": "Severity to report at. `off` is equivalent to `enabled: false` but allows toggling without losing the severity."
+        }
+      }
+    }
+  }
+}

@@ -363,6 +363,78 @@ describe("init config file parses as our own --config", async () => {
   });
 });
 
+describe("schema.json", () => {
+  it("rule keys match DEFAULT_CONFIG.rules (generator can't drift)", async () => {
+    const { readFile } = await import("node:fs/promises");
+    const { fileURLToPath } = await import("node:url");
+    const { dirname, resolve } = await import("node:path");
+    const { DEFAULT_CONFIG } = await import("../src/config.js");
+
+    const here = dirname(fileURLToPath(import.meta.url));
+    const schema = JSON.parse(
+      await readFile(resolve(here, "..", "schema.json"), "utf8")
+    ) as {
+      properties: { rules: { properties: Record<string, unknown> } };
+      $defs: { RuleConfig: { properties: { severity: { enum: string[] } } } };
+    };
+
+    const schemaKeys = Object.keys(schema.properties.rules.properties).sort();
+    const configKeys = Object.keys(DEFAULT_CONFIG.rules).sort();
+    assert.deepEqual(
+      schemaKeys,
+      configKeys,
+      "schema.json rule properties must exactly match RulesConfig in code. Run `npm run schema:gen`."
+    );
+
+    // Sanity: severity enum matches the Severity union.
+    assert.deepEqual(
+      schema.$defs.RuleConfig.properties.severity.enum.sort(),
+      ["error", "info", "off", "warning"]
+    );
+  });
+
+  it("scaffolded init config validates structurally against the schema", async () => {
+    const { runInit } = await import("../src/init.js");
+    const { readFile, mkdtemp } = await import("node:fs/promises");
+    const { tmpdir } = await import("node:os");
+    const { join, dirname, resolve } = await import("node:path");
+    const { fileURLToPath } = await import("node:url");
+
+    const dir = await mkdtemp(join(tmpdir(), "mcpcheck-schema-"));
+    await runInit({ cwd: dir, force: false, configOnly: true });
+    const cfg = JSON.parse(
+      await readFile(join(dir, "mcpcheck.config.json"), "utf8")
+    ) as { $schema?: string; rules: Record<string, unknown> };
+
+    const here = dirname(fileURLToPath(import.meta.url));
+    const schema = JSON.parse(
+      await readFile(resolve(here, "..", "schema.json"), "utf8")
+    ) as {
+      properties: { rules: { properties: Record<string, unknown> } };
+    };
+    const schemaRuleKeys = new Set(Object.keys(schema.properties.rules.properties));
+
+    assert.equal(
+      typeof cfg.$schema,
+      "string",
+      "scaffolded config should ship with a $schema pointer"
+    );
+    for (const key of Object.keys(cfg.rules)) {
+      assert.ok(
+        schemaRuleKeys.has(key),
+        `scaffolded rule "${key}" is not in schema.json — schema or scaffolder drifted`
+      );
+    }
+    // Every schema-known rule should be present (no surprise omissions).
+    for (const key of schemaRuleKeys) {
+      assert.ok(
+        key in cfg.rules,
+        `schema rule "${key}" is missing from scaffolded mcpcheck.config.json`
+      );
+    }
+  });
+});
+
 describe("rule-docs", () => {
   it("exposes an explanation for every built-in rule id", async () => {
     const { RULE_DOCS, explainRule } = await import("../src/rule-docs.js");
