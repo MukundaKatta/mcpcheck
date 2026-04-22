@@ -185,6 +185,16 @@ Plain-http local endpoints are handled separately by the \`invalid-url\` rule (h
 **Fix:** switch the URL scheme to https (or drop the credential header if the server really is open).`,
   },
   {
+    id: "cwd-not-absolute",
+    title: "Server `cwd` is a relative path",
+    defaultSeverity: "warning",
+    autofix: false,
+    summary: "Server declares `cwd: \"./foo\"` / `cwd: \"foo\"`.",
+    details: `Same story as \`relative-path\` for \`command\`: different MCP clients launch the subprocess from different starting directories. A relative \`cwd\` that works in one client almost always breaks in another.
+
+**Fix:** use an absolute path.`,
+  },
+  {
     id: "empty-env-value",
     title: "Env var with an empty-string value",
     defaultSeverity: "warning",

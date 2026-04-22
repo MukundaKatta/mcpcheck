@@ -25,6 +25,7 @@ export const DEFAULT_CONFIG: Mcpcheckconfig = {
     plaintextHttpWithToken: { enabled: true, severity: "error" },
     invalidEnvVarName: { enabled: true, severity: "warning" },
     emptyEnvValue: { enabled: true, severity: "warning" },
+    cwdNotAbsolute: { enabled: true, severity: "warning" },
   },
 };
 

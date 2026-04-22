@@ -74,6 +74,7 @@ interface CliOptions {
   excludeRule?: string[];
   onlyRule?: string[];
   onlyFixable: boolean;
+  sortBy?: "severity" | "rule" | "line" | "file";
 }
 
 const DEFAULT_BASELINE_PATH = ".mcpcheck.baseline.json";
@@ -185,6 +186,10 @@ async function main(): Promise<void> {
     await handleFmt(process.argv.slice(3));
     return;
   }
+  if (process.argv[2] === "list-servers") {
+    await handleListServers(process.argv.slice(3));
+    return;
+  }
   if (process.argv[2] === "graph") {
     await handleGraph(process.argv.slice(3));
     return;
@@ -278,6 +283,10 @@ async function main(): Promise<void> {
       (val: string, prev: string[] = []) => [...prev, val]
     )
     .option("--only-fixable", "only report issues that have an autofix", false)
+    .option(
+      "--sort-by <key>",
+      "sort issues within each file by severity | rule | line | file"
+    )
     .version(readVersion(), "-v, --version")
     .addHelpText(
       "after",
@@ -470,6 +479,20 @@ async function main(): Promise<void> {
   ) {
     applyRuleFilters(report, opts);
   }
+  if (opts.sortBy) {
+    const rank = { error: 0, warning: 1, info: 2, off: 3 };
+    const cmp = opts.sortBy;
+    for (const f of report.files) {
+      f.issues.sort((a, b) => {
+        if (cmp === "severity") {
+          return rank[a.severity] - rank[b.severity] || (a.line ?? 0) - (b.line ?? 0);
+        }
+        if (cmp === "rule") return a.ruleId.localeCompare(b.ruleId);
+        if (cmp === "line") return (a.line ?? 0) - (b.line ?? 0);
+        return 0; // "file" is the default ordering; per-file sort is a no-op
+      });
+    }
+  }
   const viewReport = opts.quiet && opts.format === "text" ? filterQuiet(report) : report;
   const out = renderReport(opts.format, viewReport);
   if (opts.output) {
@@ -659,6 +682,28 @@ function sortServerKeys(parsed: unknown): unknown {
     out[k] = v;
   }
   return out;
+}
+
+async function handleListServers(argv: string[]): Promise<void> {
+  const files = argv.filter((a) => !a.startsWith("-"));
+  if (files.length === 0 || argv.includes("-h") || argv.includes("--help")) {
+    process.stderr.write(
+      "Usage: mcpcheck list-servers <file...>\n" +
+        "One line per server with file, name, transport, target, pinned, disabled.\n"
+    );
+    process.exit(files.length === 0 ? 2 : 0);
+  }
+  const { listServersFromFile, formatServerRowsText } = await import("./list-servers.js");
+  const rows = [];
+  for (const file of files) {
+    try {
+      rows.push(...(await listServersFromFile(file)));
+    } catch (err) {
+      process.stderr.write(pc.yellow(`[list-servers] skip ${file}: ${(err as Error).message}\n`));
+    }
+  }
+  process.stdout.write(formatServerRowsText(rows));
+  process.exit(0);
 }
 
 async function handleGraph(argv: string[]): Promise<void> {

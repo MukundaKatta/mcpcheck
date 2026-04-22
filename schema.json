@@ -197,6 +197,14 @@
             "enabled": true,
             "severity": "warning"
           }
+        },
+        "cwdNotAbsolute": {
+          "$ref": "#/$defs/RuleConfig",
+          "description": "Server `cwd` is a relative path — Server declares `cwd: \"./foo\"` / `cwd: \"foo\"`.",
+          "default": {
+            "enabled": true,
+            "severity": "warning"
+          }
         }
       }
     },

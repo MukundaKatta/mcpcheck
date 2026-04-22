@@ -8,6 +8,15 @@ uses [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **`mcpcheck list-servers <file...>`** — one row per server across
+  every input file with columns for file, name, transport, target
+  (npx package / docker image / url hostname), pinned-ness,
+  disabled. Complements `stats` (counts) and `graph` (diagram).
+- **New rule: `cwd-not-absolute`** (warning) — `cwd` field is a
+  relative path. Same cross-client-inconsistency story as
+  `relative-path` for `command`. 25 built-in rules.
+- **`--sort-by <severity|rule|line|file>`** — stable sort within
+  each file. Easier to eyeball "all the errors together" output.
 - **New rule: `empty-env-value`** (warning) — `"API_KEY": ""` is
   different from omitting the key: the subprocess sees the variable
   with value `""`. Causes "sometimes auth, sometimes not" inconsistency

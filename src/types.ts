@@ -71,6 +71,7 @@ export interface RulesConfig {
   plaintextHttpWithToken: RuleConfig;
   invalidEnvVarName: RuleConfig;
   emptyEnvValue: RuleConfig;
+  cwdNotAbsolute: RuleConfig;
 }
 
 export interface Mcpcheckconfig {

@@ -30,6 +30,7 @@ This page is generated from `src/rule-docs.ts`. Don't edit it by hand.
 | [`unstable-reference`](#unstable-reference) | warning | no | `npx <pkg>` / `uvx <pkg>` / `docker run <image>` without a pinned version. |
 | [`http-without-auth`](#http-without-auth) | warning | no | A URL-transport server targets an https endpoint but declares no `Authorization` header. |
 | [`plaintext-http-with-token`](#plaintext-http-with-token) | error | no | The URL starts with `http://` (non-local) AND the server declares `Authorization` / `X-API-Key` / `Cookie` / similar. |
+| [`cwd-not-absolute`](#cwd-not-absolute) | warning | no | Server declares `cwd: "./foo"` / `cwd: "foo"`. |
 | [`empty-env-value`](#empty-env-value) | warning | no | An `env` entry has value `""`. |
 | [`invalid-env-var-name`](#invalid-env-var-name) | warning | no | An env var name doesn't match `[A-Z_][A-Z0-9_]*`. |
 | [`placeholder-value`](#placeholder-value) | error | no | An `env` value looks like template text (`YOUR_API_KEY_HERE`, `<token>`, `xxx…`, `replace-me`, `TODO`). |
@@ -250,6 +251,19 @@ The URL starts with `http://` (non-local) AND the server declares `Authorization
 That token rides over the wire in cleartext; any on-path attacker sees it. `invalid-url` warns about plain http to non-local hosts in general; this rule fires only on the unambiguously-bad case where a credential is also being sent.
 
 **Fix:** switch the URL scheme to https (or drop the credential header if the server really is open).
+
+## cwd-not-absolute
+
+**Server `cwd` is a relative path**
+
+- Default severity: `warning`
+- Autofix: no
+
+Server declares `cwd: "./foo"` / `cwd: "foo"`.
+
+Same story as `relative-path` for `command`: different MCP clients launch the subprocess from different starting directories. A relative `cwd` that works in one client almost always breaks in another.
+
+**Fix:** use an absolute path.
 
 ## empty-env-value
 
