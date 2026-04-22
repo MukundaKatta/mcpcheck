@@ -55,7 +55,9 @@ const DEFAULT_CONFIG = `{
     "shellMetachars":        { "enabled": true,  "severity": "error"   },
     "typosquatPackage":      { "enabled": true,  "severity": "error"   },
     "emptyArgs":             { "enabled": true,  "severity": "warning" },
-    "placeholderValue":      { "enabled": true,  "severity": "error"   }
+    "placeholderValue":      { "enabled": true,  "severity": "error"   },
+    "plaintextHttpWithToken": { "enabled": true, "severity": "error"   },
+    "invalidEnvVarName":     { "enabled": true,  "severity": "warning" }
   }
 }
 `;

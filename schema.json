@@ -173,6 +173,22 @@
             "enabled": true,
             "severity": "error"
           }
+        },
+        "plaintextHttpWithToken": {
+          "$ref": "#/$defs/RuleConfig",
+          "description": "Credential header sent over plain HTTP — The URL starts with `http://` (non-local) AND the server declares `Authorization` / `X-API-Key` / `Cookie` / similar.",
+          "default": {
+            "enabled": true,
+            "severity": "error"
+          }
+        },
+        "invalidEnvVarName": {
+          "$ref": "#/$defs/RuleConfig",
+          "description": "Env var name isn't POSIX-portable — An env var name doesn't match `[A-Z_][A-Z0-9_]*`.",
+          "default": {
+            "enabled": true,
+            "severity": "warning"
+          }
         }
       }
     },

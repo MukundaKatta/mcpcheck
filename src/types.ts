@@ -68,6 +68,8 @@ export interface RulesConfig {
   typosquatPackage: RuleConfig;
   emptyArgs: RuleConfig;
   placeholderValue: RuleConfig;
+  plaintextHttpWithToken: RuleConfig;
+  invalidEnvVarName: RuleConfig;
 }
 
 export interface Mcpcheckconfig {

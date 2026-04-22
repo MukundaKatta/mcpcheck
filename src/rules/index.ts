@@ -13,6 +13,8 @@ import { shellMetacharsRule } from "./shell-metachars.js";
 import { typosquatRule } from "./typosquat.js";
 import { emptyArgsRule } from "./empty-args.js";
 import { placeholderValueRule } from "./placeholder-value.js";
+import { plaintextHttpWithTokenRule } from "./plaintext-http-with-token.js";
+import { invalidEnvVarNameRule } from "./invalid-env-var-name.js";
 
 export const BUILTIN_RULES: Rule[] = [
   structureRules,
@@ -29,4 +31,6 @@ export const BUILTIN_RULES: Rule[] = [
   typosquatRule,
   emptyArgsRule,
   placeholderValueRule,
+  plaintextHttpWithTokenRule,
+  invalidEnvVarNameRule,
 ];

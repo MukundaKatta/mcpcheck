@@ -177,6 +177,10 @@ async function main(): Promise<void> {
     await handlePipe(process.argv.slice(3));
     return;
   }
+  if (process.argv[2] === "scaffold-workflow") {
+    await handleScaffoldWorkflow(process.argv.slice(3));
+    return;
+  }
   if (process.argv[2] === "fmt") {
     await handleFmt(process.argv.slice(3));
     return;
@@ -563,6 +567,44 @@ function applyRuleFilters(report: RunReport, opts: CliOptions): void {
       else if (i.severity === "info") report.infoCount += 1;
     }
   }
+}
+
+async function handleScaffoldWorkflow(argv: string[]): Promise<void> {
+  const force = argv.includes("--force");
+  if (argv.includes("-h") || argv.includes("--help")) {
+    process.stderr.write(
+      "Usage: mcpcheck scaffold-workflow [--force]\n" +
+        "Copies the PR-comment workflow template into\n" +
+        ".github/workflows/mcpcheck-pr-comment.yml so CI posts a markdown\n" +
+        "report on every MCP-config-touching PR.\n"
+    );
+    process.exit(0);
+  }
+  const { mkdir, writeFile, access } = await import("node:fs/promises");
+  const { readFileSync } = await import("node:fs");
+  const { fileURLToPath } = await import("node:url");
+  const { dirname, resolve } = await import("node:path");
+  const here = dirname(fileURLToPath(import.meta.url));
+  const source = readFileSync(
+    resolve(here, "..", "examples", "github-actions", "mcpcheck-pr-comment.yml"),
+    "utf8"
+  );
+  const target = ".github/workflows/mcpcheck-pr-comment.yml";
+  if (!force) {
+    try {
+      await access(target);
+      process.stderr.write(
+        pc.yellow(`[scaffold-workflow] ${target} already exists (pass --force to overwrite).\n`)
+      );
+      process.exit(1);
+    } catch {
+      // doesn't exist — proceed
+    }
+  }
+  await mkdir(".github/workflows", { recursive: true });
+  await writeFile(target, source, "utf8");
+  process.stderr.write(pc.green(`[scaffold-workflow] wrote ${target}\n`));
+  process.exit(0);
 }
 
 async function handleFmt(argv: string[]): Promise<void> {

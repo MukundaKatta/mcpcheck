@@ -22,6 +22,8 @@ export const DEFAULT_CONFIG: Mcpcheckconfig = {
     typosquatPackage: { enabled: true, severity: "error" },
     emptyArgs: { enabled: true, severity: "warning" },
     placeholderValue: { enabled: true, severity: "error" },
+    plaintextHttpWithToken: { enabled: true, severity: "error" },
+    invalidEnvVarName: { enabled: true, severity: "warning" },
   },
 };
 

@@ -8,6 +8,20 @@ uses [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **New rule: `plaintext-http-with-token`** (error) — fires only on
+  the third quadrant that the existing URL rules miss: http:// URL
+  to a non-local host AND an `Authorization` / `X-API-Key` /
+  `Cookie` / similar credential header. That token rides in
+  cleartext.
+- **New rule: `invalid-env-var-name`** (warning) — env key doesn't
+  match POSIX `[A-Z_][A-Z0-9_]*`. Mixed case / hyphens / leading
+  digits silently drop in some shells. 23 built-in rules now.
+- **`mcpcheck scaffold-workflow [--force]`** — copies
+  `examples/github-actions/mcpcheck-pr-comment.yml` into
+  `.github/workflows/` so a brand-new repo gets lint + PR comments
+  in one command.
+- **2 more secret providers** — Anyscale (`esecret_…`), Inngest
+  signing keys (`signkey-(prod|branch|test)-…`).
 - **New rule: `placeholder-value`** (error) — flags env values that
   look like template text: `YOUR_API_KEY_HERE`, `<token>`, `xxx…`,
   `replace-me`, `TODO`, `PLACEHOLDER`, `changeme`. Doesn't trip

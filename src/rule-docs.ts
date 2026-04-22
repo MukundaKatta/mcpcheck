@@ -175,6 +175,26 @@ Plain-http local endpoints are handled separately by the \`invalid-url\` rule (h
 **Fix:** add a headers block with the substituted token, or disable the rule for this server if the endpoint really is open.`,
   },
   {
+    id: "plaintext-http-with-token",
+    title: "Credential header sent over plain HTTP",
+    defaultSeverity: "error",
+    autofix: false,
+    summary: "The URL starts with `http://` (non-local) AND the server declares `Authorization` / `X-API-Key` / `Cookie` / similar.",
+    details: `That token rides over the wire in cleartext; any on-path attacker sees it. \`invalid-url\` warns about plain http to non-local hosts in general; this rule fires only on the unambiguously-bad case where a credential is also being sent.
+
+**Fix:** switch the URL scheme to https (or drop the credential header if the server really is open).`,
+  },
+  {
+    id: "invalid-env-var-name",
+    title: "Env var name isn't POSIX-portable",
+    defaultSeverity: "warning",
+    autofix: false,
+    summary: "An env var name doesn't match `[A-Z_][A-Z0-9_]*`.",
+    details: `Mixed case, hyphens, or leading digits work in some shells and trip others. Node and Python accept pretty much anything; plain \`/bin/sh\` and a handful of smaller clients don't.
+
+**Fix:** rename to ALL_CAPS. If you rely on a specific casing for a third-party client, disable the rule for that server.`,
+  },
+  {
     id: "placeholder-value",
     title: "Env value is a copy-paste placeholder",
     defaultSeverity: "error",

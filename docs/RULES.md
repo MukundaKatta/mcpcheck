@@ -29,6 +29,8 @@ This page is generated from `src/rule-docs.ts`. Don't edit it by hand.
 | [`duplicate-server-name`](#duplicate-server-name) | error | no | Two server entries differ only by case. |
 | [`unstable-reference`](#unstable-reference) | warning | no | `npx <pkg>` / `uvx <pkg>` / `docker run <image>` without a pinned version. |
 | [`http-without-auth`](#http-without-auth) | warning | no | A URL-transport server targets an https endpoint but declares no `Authorization` header. |
+| [`plaintext-http-with-token`](#plaintext-http-with-token) | error | no | The URL starts with `http://` (non-local) AND the server declares `Authorization` / `X-API-Key` / `Cookie` / similar. |
+| [`invalid-env-var-name`](#invalid-env-var-name) | warning | no | An env var name doesn't match `[A-Z_][A-Z0-9_]*`. |
 | [`placeholder-value`](#placeholder-value) | error | no | An `env` value looks like template text (`YOUR_API_KEY_HERE`, `<token>`, `xxx…`, `replace-me`, `TODO`). |
 | [`empty-args`](#empty-args) | warning | no | A command that needs arguments (`npx` / `uvx` / `docker` / shells) has `args: []`. |
 | [`typosquat-package`](#typosquat-package) | error | no | An `npx` / `uvx` package name is within edit distance 3 of an official `@modelcontextprotocol/*` server but doesn't match it. |
@@ -234,6 +236,32 @@ Most remote MCP servers require a bearer token or similar auth. A config with an
 Plain-http local endpoints are handled separately by the `invalid-url` rule (http to non-localhost is already flagged). Real public no-auth endpoints exist — mock servers, open-data servers — so this defaults to warning rather than error.
 
 **Fix:** add a headers block with the substituted token, or disable the rule for this server if the endpoint really is open.
+
+## plaintext-http-with-token
+
+**Credential header sent over plain HTTP**
+
+- Default severity: `error`
+- Autofix: no
+
+The URL starts with `http://` (non-local) AND the server declares `Authorization` / `X-API-Key` / `Cookie` / similar.
+
+That token rides over the wire in cleartext; any on-path attacker sees it. `invalid-url` warns about plain http to non-local hosts in general; this rule fires only on the unambiguously-bad case where a credential is also being sent.
+
+**Fix:** switch the URL scheme to https (or drop the credential header if the server really is open).
+
+## invalid-env-var-name
+
+**Env var name isn't POSIX-portable**
+
+- Default severity: `warning`
+- Autofix: no
+
+An env var name doesn't match `[A-Z_][A-Z0-9_]*`.
+
+Mixed case, hyphens, or leading digits work in some shells and trip others. Node and Python accept pretty much anything; plain `/bin/sh` and a handful of smaller clients don't.
+
+**Fix:** rename to ALL_CAPS. If you rely on a specific casing for a third-party client, disable the rule for that server.
 
 ## placeholder-value
 

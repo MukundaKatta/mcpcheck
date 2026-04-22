@@ -73,6 +73,7 @@
     "action.yml",
     "schema.json",
     "schema",
+    "examples",
     "README.md",
     "CHANGELOG.md",
     "LICENSE"

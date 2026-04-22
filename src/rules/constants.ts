@@ -112,6 +112,8 @@ export const SECRET_PATTERNS: SecretPattern[] = [
   // reasoning as Clerk → Stripe).
   // Supabase personal access tokens (different from the service_role JWT).
   { name: "Supabase personal access token", re: /^sbp_[a-f0-9]{40}$/ },
+  { name: "Anyscale API key", re: /^esecret_[A-Za-z0-9]{40,}$/ },
+  { name: "Inngest signing key", re: /^signkey-(prod|branch|test)-[A-Za-z0-9]{40,}$/ },
   // Google Cloud service account keys are JSON blobs; people sometimes paste the
   // whole thing into a single env var value. Match on the private_key_id field,
   // which is always a 40-char hex string immediately preceded by that key name.
