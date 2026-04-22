@@ -31,3 +31,6 @@ All notable changes to the mcpcheck VS Code extension.
 - "Explain rule..." with no argument now reads the diagnostic under the
   cursor and opens its docs. Falls back to the quickpick only when the
   cursor isn't on an mcpcheck finding.
+- New command: `mcpcheck: Fix all autofixable issues across workspace`.
+  Finds every MCP config in the workspace (per `mcpcheck.filePatterns`),
+  applies every available autofix, saves the file, and re-lints.

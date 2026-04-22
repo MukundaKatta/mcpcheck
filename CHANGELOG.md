@@ -8,6 +8,25 @@ uses [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **`mcpcheck diff <a.json> <b.json>`** — compare the issues two MCP
+  configs produce. Prints a `git diff`-style list of issues added and
+  removed (identified by rule id + jsonPath + message), plus an
+  unchanged count. Exits 1 when issues were added, 0 otherwise — drops
+  right into a PR-review workflow that lints before/after.
+- **"Did you mean X?" suggestions on unknown fields.** The
+  `unknown-field` rule now runs a Levenshtein search against the
+  `KNOWN_SERVER_FIELDS` set; for typos with edit distance ≤ 2
+  (`commnad` → `command`, `autoApprve` → `autoApprove`) the error
+  message appends a suggestion. Messages stay quiet when nothing is
+  close enough.
+- **3 more secret providers** — Cloudflare API tokens (`keyHint:
+  CLOUDFLARE|CF_API|CF_TOKEN`), Datadog API keys (32-hex, `keyHint:
+  DATADOG|DD_API|DD_KEY`), and Discord bot tokens (3-segment dotted
+  format). Bringing coverage to 24 provider families.
+- **VS Code `mcpcheck: Fix all autofixable issues across workspace`** —
+  runs `findFiles` across `mcpcheck.filePatterns`, applies every autofix
+  in every match, saves, and re-lints. Surfaces a summary notification
+  (`fixed N issue(s) across M file(s)`) when done.
 - **JSON Schema for MCP config files themselves** —
   `schema/mcp-config.schema.json` describes the shape of `mcp.json`,
   `.mcp.json`, `claude_desktop_config.json`, `cline_mcp_settings.json`,

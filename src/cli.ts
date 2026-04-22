@@ -27,6 +27,7 @@ import { formatSarif } from "./formatters/sarif.js";
 import { formatGithub } from "./formatters/github.js";
 import { explainRule, listRuleIds } from "./rule-docs.js";
 import { runInit } from "./init.js";
+import { diffFiles } from "./diff.js";
 import type { Mcpcheckconfig, Rule, RunReport, FileReport } from "./types.js";
 
 type Format = "text" | "json" | "sarif" | "github";
@@ -122,6 +123,10 @@ async function main(): Promise<void> {
     await handleInit(process.argv.slice(3));
     return;
   }
+  if (process.argv[2] === "diff") {
+    await handleDiff(process.argv.slice(3));
+    return;
+  }
 
   const program = new Command()
     .name("mcpcheck")
@@ -154,6 +159,7 @@ async function main(): Promise<void> {
         "  mcpcheck --fail-on warning                   strict CI mode",
         "  mcpcheck --explain hardcoded-secret          print rule documentation",
         "  mcpcheck init                                scaffold mcpcheck.config.json + CI",
+        "  mcpcheck diff a.json b.json                  show which issues changed between two configs",
       ].join("\n")
     )
     .parse(process.argv);
@@ -235,6 +241,38 @@ async function main(): Promise<void> {
 function filterQuiet(report: RunReport): RunReport {
   const files: FileReport[] = report.files.filter((f) => f.issues.length > 0);
   return { ...report, files };
+}
+
+async function handleDiff(argv: string[]): Promise<void> {
+  if (argv.length !== 2 || argv.includes("-h") || argv.includes("--help")) {
+    process.stderr.write(
+      "Usage: mcpcheck diff <before.json> <after.json>\n" +
+        "Compare the issues two MCP configs produce and print what was added / removed.\n"
+    );
+    process.exit(argv.length === 2 ? 0 : 2);
+  }
+  const [a, b] = argv as [string, string];
+  const diff = await diffFiles(a, b);
+  const lines: string[] = [];
+  if (diff.added.length === 0 && diff.removed.length === 0) {
+    process.stdout.write(pc.green(`No issue changes. (${diff.unchanged} unchanged)\n`));
+    process.exit(0);
+  }
+  for (const i of diff.removed) {
+    lines.push(pc.green(`- ${pad(i.line)} ${i.severity.padEnd(8)} ${i.ruleId}  ${i.message}`));
+  }
+  for (const i of diff.added) {
+    lines.push(pc.red(`+ ${pad(i.line)} ${i.severity.padEnd(8)} ${i.ruleId}  ${i.message}`));
+  }
+  lines.push(
+    `\n${diff.added.length} added, ${diff.removed.length} removed, ${diff.unchanged} unchanged.`
+  );
+  process.stdout.write(lines.join("\n") + "\n");
+  process.exit(diff.added.length > 0 ? 1 : 0);
+}
+
+function pad(line: number | undefined): string {
+  return line ? `L${String(line).padStart(4, " ")}` : "     ";
 }
 
 async function handleInit(argv: string[]): Promise<void> {

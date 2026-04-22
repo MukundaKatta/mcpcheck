@@ -40,6 +40,7 @@
     "commands": [
       { "command": "mcpcheck.lint", "title": "mcpcheck: Lint active file" },
       { "command": "mcpcheck.fixAll", "title": "mcpcheck: Fix all autofixable issues in active file" },
+      { "command": "mcpcheck.fixAllInWorkspace", "title": "mcpcheck: Fix all autofixable issues across workspace" },
       { "command": "mcpcheck.explainRule", "title": "mcpcheck: Explain rule..." }
     ],
     "jsonValidation": [

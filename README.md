@@ -69,6 +69,7 @@ mcpcheck --quiet                             # only show files that have issues
 mcpcheck --explain hardcoded-secret          # print docs for one rule
 mcpcheck --list-rules                        # list every built-in rule id
 mcpcheck init                                # scaffold mcpcheck.config.json + CI
+mcpcheck diff a.json b.json                  # show which issues changed between two configs
 ```
 
 | Flag | Purpose |

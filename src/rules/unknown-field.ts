@@ -1,6 +1,7 @@
 import type { Rule } from "../types.js";
 import { getServers, serversKey, makeIssue } from "./helpers.js";
 import { KNOWN_SERVER_FIELDS } from "./constants.js";
+import { closestMatch } from "./fuzzy.js";
 
 export const unknownFieldRule: Rule = (ctx) => {
   const issues: ReturnType<Rule> = [];
@@ -15,15 +16,16 @@ export const unknownFieldRule: Rule = (ctx) => {
     if (typeof serverRaw !== "object" || serverRaw === null) continue;
     const server = serverRaw as Record<string, unknown>;
     for (const k of Object.keys(server)) {
-      if (!KNOWN_SERVER_FIELDS.has(k)) {
-        issues.push(makeIssue({
-          ruleId: "unknown-field",
-          severity: rule.severity,
-          message: `Server "${name}" has unknown field "${k}". May be a client-specific extension or a typo.`,
-          jsonPath: `${root}.${name}.${k}`,
-          source: ctx.source,
-        }));
-      }
+      if (KNOWN_SERVER_FIELDS.has(k)) continue;
+      const suggestion = closestMatch(k, KNOWN_SERVER_FIELDS);
+      const hint = suggestion ? ` Did you mean "${suggestion}"?` : "";
+      issues.push(makeIssue({
+        ruleId: "unknown-field",
+        severity: rule.severity,
+        message: `Server "${name}" has unknown field "${k}".${hint} May be a client-specific extension or a typo.`,
+        jsonPath: `${root}.${name}.${k}`,
+        source: ctx.source,
+      }));
     }
   }
   return issues;

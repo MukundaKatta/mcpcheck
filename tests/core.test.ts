@@ -193,6 +193,17 @@ describe("checkSource - expanded secret providers", () => {
     ["PERPLEXITY_KEY", "pplx-" + "a".repeat(40), "Perplexity API key"],
     ["GROQ_API_KEY", "gsk_" + "a".repeat(40), "Groq API key"],
     ["XAI_KEY", "xai-" + "a".repeat(30), "xAI (Grok) API key"],
+    ["CLOUDFLARE_API_TOKEN", "a".repeat(40), "Cloudflare API token"],
+    ["DATADOG_API_KEY", "a".repeat(32), "Datadog API key"],
+    // Synthetic value that matches the Discord regex (three dotted segments
+    // of the right lengths) without looking like a real base64-encoded
+    // snowflake id. We use uppercase placeholder runs so GitHub's secret
+    // scanner doesn't flag the fixture itself.
+    [
+      "DISCORD_BOT_TOKEN",
+      "FAKEFAKEFAKEFAKEFAKEFAKE.FAKEFA.FAKEFAKEFAKEFAKEFAKEFAKEFAK",
+      "Discord bot token",
+    ],
   ];
   for (const [envKey, value, label] of cases) {
     it(`flags ${label}`, () => {
@@ -293,6 +304,46 @@ describe("dangerous-command rule", () => {
       report.issues.filter((i) => i.ruleId === "dangerous-command").length,
       0
     );
+  });
+});
+
+describe("unknown-field 'did you mean' suggestions", () => {
+  it("suggests the nearest known field for a typo", async () => {
+    const { checkSource } = await import("../src/core.js");
+    const src = `{"mcpServers":{"s":{"command":"x","commnad":"y"}}}`;
+    const report = checkSource(src, "x.json");
+    const msg = report.issues.find((i) => i.ruleId === "unknown-field")?.message;
+    assert.ok(msg, "unknown-field should fire on 'commnad'");
+    assert.ok(msg!.includes('Did you mean "command"'), `expected suggestion, got: ${msg}`);
+  });
+
+  it("omits the hint when nothing is close enough", async () => {
+    const { checkSource } = await import("../src/core.js");
+    const src = `{"mcpServers":{"s":{"command":"x","zzztotally_foreign":"y"}}}`;
+    const report = checkSource(src, "x.json");
+    const msg = report.issues.find((i) => i.ruleId === "unknown-field")?.message;
+    assert.ok(msg);
+    assert.ok(!msg!.includes("Did you mean"), `should not suggest, got: ${msg}`);
+  });
+});
+
+describe("diffReports", () => {
+  it("classifies added / removed / unchanged correctly", async () => {
+    const { diffReports } = await import("../src/diff.js");
+    const base = [
+      { ruleId: "r1", severity: "error" as const, message: "m1", jsonPath: "a" },
+      { ruleId: "r2", severity: "error" as const, message: "m2", jsonPath: "b" },
+    ];
+    const after = [
+      { ruleId: "r2", severity: "error" as const, message: "m2", jsonPath: "b" },
+      { ruleId: "r3", severity: "warning" as const, message: "m3", jsonPath: "c" },
+    ];
+    const diff = diffReports(base, after);
+    assert.equal(diff.added.length, 1);
+    assert.equal(diff.added[0]!.ruleId, "r3");
+    assert.equal(diff.removed.length, 1);
+    assert.equal(diff.removed[0]!.ruleId, "r1");
+    assert.equal(diff.unchanged, 1);
   });
 });
 

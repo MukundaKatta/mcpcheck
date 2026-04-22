@@ -103,6 +103,46 @@ export function activate(context: vscode.ExtensionContext): void {
       await applyAllFixes(editor.document);
       lintIfEligible(editor.document);
     }),
+    vscode.commands.registerCommand("mcpcheck.fixAllInWorkspace", async () => {
+      const patterns = filePatterns();
+      if (patterns.length === 0) return;
+      // findFiles takes a single glob; OR them together with `{a,b,c}`.
+      const glob = `{${patterns.join(",")}}`;
+      const uris = await vscode.workspace.findFiles(glob, "**/node_modules/**");
+      if (uris.length === 0) {
+        vscode.window.showInformationMessage("mcpcheck: no MCP configs found in workspace");
+        return;
+      }
+      let totalFixed = 0;
+      let filesTouched = 0;
+      for (const uri of uris) {
+        const doc = await vscode.workspace.openTextDocument(uri);
+        const report = checkSource(doc.getText(), doc.fileName);
+        const fixable = report.issues.filter((i) => i.fix);
+        if (fixable.length === 0) continue;
+        const edit = new vscode.WorkspaceEdit();
+        for (const issue of fixable) {
+          edit.replace(
+            doc.uri,
+            new vscode.Range(
+              doc.positionAt(issue.fix!.start),
+              doc.positionAt(issue.fix!.end)
+            ),
+            issue.fix!.replacement
+          );
+        }
+        const ok = await vscode.workspace.applyEdit(edit);
+        if (ok) {
+          await doc.save();
+          totalFixed += fixable.length;
+          filesTouched += 1;
+          lintIfEligible(doc);
+        }
+      }
+      vscode.window.showInformationMessage(
+        `mcpcheck: fixed ${totalFixed} issue(s) across ${filesTouched} file(s)`
+      );
+    }),
     vscode.commands.registerCommand("mcpcheck.explainRule", async (id?: string) => {
       // Resolution order:
       //   1. explicit argument (from the diagnostic code-link)
