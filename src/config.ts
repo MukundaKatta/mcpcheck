@@ -19,6 +19,7 @@ export const DEFAULT_CONFIG: Mcpcheckconfig = {
     httpWithoutAuth: { enabled: true, severity: "warning" },
     duplicateEnvKey: { enabled: true, severity: "warning" },
     shellMetachars: { enabled: true, severity: "error" },
+    typosquatPackage: { enabled: true, severity: "error" },
   },
 };
 

@@ -8,6 +8,18 @@ uses [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **`mcpcheck pipe`** — reads a config from stdin, lints it, writes the
+  formatted report to stdout. All formatters work. Exits 1 on any
+  error finding. `git show HEAD:mcp.json | mcpcheck pipe --format json`
+  no longer needs a temp file.
+- **`--format csv`** — one row per issue with a stable header
+  (`file,line,severity,rule,message,json_path,autofix_available`).
+  RFC-4180 quoted. For bulk audits piped into a spreadsheet.
+- **New rule: `typosquat-package`** (error) — `npx` / `uvx` package
+  names within edit distance 3 of an official `@modelcontextprotocol/*`
+  server get flagged. Scoped only to MCP-adjacent candidates (names
+  containing `mcp`, `server-`, `context`, or starting with `@mod…`)
+  so legitimate third-party servers don't trip it. 19 built-in rules.
 - **Expanded `unstable-reference` mutable-tag detection.** In addition
   to `:latest` and missing-tag, the rule now flags `:beta`, `:dev`,
   `:develop`, `:nightly`, `:canary`, `:edge`, `:snapshot`, `:main`,

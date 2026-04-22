@@ -28,6 +28,7 @@ import { formatGithub } from "./formatters/github.js";
 import { formatMarkdown } from "./formatters/markdown.js";
 import { formatJunit } from "./formatters/junit.js";
 import { formatHtml } from "./formatters/html.js";
+import { formatCsv } from "./formatters/csv.js";
 import { explainRule, listRuleIds } from "./rule-docs.js";
 import { runInit } from "./init.js";
 import { diffFiles } from "./diff.js";
@@ -52,7 +53,7 @@ import {
 } from "./transform.js";
 import type { Mcpcheckconfig, Rule, RunReport, FileReport } from "./types.js";
 
-type Format = "text" | "json" | "sarif" | "github" | "markdown" | "junit" | "html";
+type Format = "text" | "json" | "sarif" | "github" | "markdown" | "junit" | "html" | "csv";
 
 interface CliOptions {
   config?: string;
@@ -169,6 +170,10 @@ async function main(): Promise<void> {
     );
     process.exit(0);
   }
+  if (process.argv[2] === "pipe") {
+    await handlePipe(process.argv.slice(3));
+    return;
+  }
   if (process.argv[2] === "snapshot") {
     await handleSnapshot(process.argv.slice(3));
     return;
@@ -210,7 +215,7 @@ async function main(): Promise<void> {
     )
     .argument("[inputs...]", "file paths or globs (defaults to common MCP config locations)")
     .option("-c, --config <path>", "mcpcheck config file")
-    .option("-f, --format <type>", "text | json | sarif | github | markdown | junit | html", "text")
+    .option("-f, --format <type>", "text | json | sarif | github | markdown | junit | html | csv", "text")
     .option("--fix", "apply autofixes in place", false)
     .option("--fail-on <level>", "exit nonzero threshold: error | warning | info | never", "error")
     .option("-o, --output <path>", "write formatted output to a file")
@@ -498,6 +503,48 @@ async function startWatch(
 function filterQuiet(report: RunReport): RunReport {
   const files: FileReport[] = report.files.filter((f) => f.issues.length > 0);
   return { ...report, files };
+}
+
+async function handlePipe(argv: string[]): Promise<void> {
+  const fmt = (extractArg(argv, "--format") ?? extractArg(argv, "-f") ?? "text") as Format;
+  const fileName = extractArg(argv, "--filename") ?? "stdin.json";
+  if (argv.includes("-h") || argv.includes("--help")) {
+    process.stderr.write(
+      "Usage: mcpcheck pipe [--format text|json|sarif|github|markdown|junit|html] [--filename name]\n" +
+        "Lint config JSON read from stdin. Writes the formatted report to stdout.\n" +
+        "Exit 0 if no errors; 1 otherwise (regardless of --format).\n"
+    );
+    process.exit(0);
+  }
+  const source = await readStdin();
+  const report = await checkFiles([fileName], {});
+  // We bypass checkFiles's disk read by invoking checkSource directly against
+  // stdin, then packaging a RunReport by hand so formatters still work.
+  const { checkSource } = await import("./core.js");
+  const fileReport = checkSource(source, fileName);
+  const runReport = {
+    files: [fileReport],
+    errorCount: fileReport.issues.filter((i) => i.severity === "error").length,
+    warningCount: fileReport.issues.filter((i) => i.severity === "warning").length,
+    infoCount: fileReport.issues.filter((i) => i.severity === "info").length,
+    durationMs: 0,
+  };
+  void report; // ignored — the above is authoritative for pipe mode
+  const out = renderReport(fmt, runReport);
+  process.stdout.write(out + (fmt === "text" ? "\n" : ""));
+  process.exit(runReport.errorCount > 0 ? 1 : 0);
+}
+
+async function readStdin(): Promise<string> {
+  if (process.stdin.isTTY) {
+    process.stderr.write(
+      pc.yellow("mcpcheck pipe: no stdin detected. Pipe a config JSON into stdin.\n")
+    );
+    process.exit(2);
+  }
+  const chunks: Buffer[] = [];
+  for await (const chunk of process.stdin) chunks.push(Buffer.from(chunk as string | Buffer));
+  return Buffer.concat(chunks).toString("utf8");
 }
 
 async function handleSnapshot(argv: string[]): Promise<void> {
@@ -884,6 +931,8 @@ function renderReport(fmt: Format, report: ReturnType<typeof checkFiles> extends
       return formatJunit(report);
     case "html":
       return formatHtml(report);
+    case "csv":
+      return formatCsv(report);
     default:
       return formatText(report);
   }

@@ -29,6 +29,7 @@ This page is generated from `src/rule-docs.ts`. Don't edit it by hand.
 | [`duplicate-server-name`](#duplicate-server-name) | error | no | Two server entries differ only by case. |
 | [`unstable-reference`](#unstable-reference) | warning | no | `npx <pkg>` / `uvx <pkg>` / `docker run <image>` without a pinned version. |
 | [`http-without-auth`](#http-without-auth) | warning | no | A URL-transport server targets an https endpoint but declares no `Authorization` header. |
+| [`typosquat-package`](#typosquat-package) | error | no | An `npx` / `uvx` package name is within edit distance 3 of an official `@modelcontextprotocol/*` server but doesn't match it. |
 | [`shell-metachars`](#shell-metachars) | error | no | `command` contains `\|`, `;`, `$(…)`, backticks, `&&`, `\|\|`, `&`, or `$VAR` but isn't a shell. |
 | [`duplicate-env-key`](#duplicate-env-key) | warning | no | Two entries in `env` differ only by case (e.g. `API_KEY` and `ApiKey`). |
 | [`dangerous-command`](#dangerous-command) | error | no | Config instructs the client to execute `curl \| sh`, `sudo`, `docker --privileged`, `-v /:/`, or similar. |
@@ -231,6 +232,21 @@ Most remote MCP servers require a bearer token or similar auth. A config with an
 Plain-http local endpoints are handled separately by the `invalid-url` rule (http to non-localhost is already flagged). Real public no-auth endpoints exist — mock servers, open-data servers — so this defaults to warning rather than error.
 
 **Fix:** add a headers block with the substituted token, or disable the rule for this server if the endpoint really is open.
+
+## typosquat-package
+
+**Package name looks like a typo of an official MCP server**
+
+- Default severity: `error`
+- Autofix: no
+
+An `npx` / `uvx` package name is within edit distance 3 of an official `@modelcontextprotocol/*` server but doesn't match it.
+
+Typosquatted npm packages are a real supply-chain attack vector — registering `@modelcontextprotoco/server-filesystem` (missing a letter) is a one-day project for a motivated attacker and mcpcheck's other rules won't catch it.
+
+The rule keeps a short, curated list of well-known official MCP servers and flags invocations that *almost* match. It won't complain about legitimate third-party servers; it only fires when the name is suspiciously close to a marquee upstream.
+
+**Fix:** check the real package name against the [official list](https://github.com/modelcontextprotocol/servers). If you meant the upstream, fix the spelling.
 
 ## shell-metachars
 

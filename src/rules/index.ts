@@ -10,6 +10,7 @@ import { dangerousCommandRule } from "./dangerous-command.js";
 import { httpWithoutAuthRule } from "./http-without-auth.js";
 import { duplicateEnvKeyRule } from "./duplicate-env-key.js";
 import { shellMetacharsRule } from "./shell-metachars.js";
+import { typosquatRule } from "./typosquat.js";
 
 export const BUILTIN_RULES: Rule[] = [
   structureRules,
@@ -23,4 +24,5 @@ export const BUILTIN_RULES: Rule[] = [
   httpWithoutAuthRule,
   duplicateEnvKeyRule,
   shellMetacharsRule,
+  typosquatRule,
 ];

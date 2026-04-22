@@ -149,6 +149,14 @@
             "enabled": true,
             "severity": "error"
           }
+        },
+        "typosquatPackage": {
+          "$ref": "#/$defs/RuleConfig",
+          "description": "Package name looks like a typo of an official MCP server — An `npx` / `uvx` package name is within edit distance 3 of an official `@modelcontextprotocol/*` server but doesn't match it.",
+          "default": {
+            "enabled": true,
+            "severity": "error"
+          }
         }
       }
     },

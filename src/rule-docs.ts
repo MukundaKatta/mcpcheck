@@ -175,6 +175,18 @@ Plain-http local endpoints are handled separately by the \`invalid-url\` rule (h
 **Fix:** add a headers block with the substituted token, or disable the rule for this server if the endpoint really is open.`,
   },
   {
+    id: "typosquat-package",
+    title: "Package name looks like a typo of an official MCP server",
+    defaultSeverity: "error",
+    autofix: false,
+    summary: "An `npx` / `uvx` package name is within edit distance 3 of an official `@modelcontextprotocol/*` server but doesn't match it.",
+    details: `Typosquatted npm packages are a real supply-chain attack vector — registering \`@modelcontextprotoco/server-filesystem\` (missing a letter) is a one-day project for a motivated attacker and mcpcheck's other rules won't catch it.
+
+The rule keeps a short, curated list of well-known official MCP servers and flags invocations that *almost* match. It won't complain about legitimate third-party servers; it only fires when the name is suspiciously close to a marquee upstream.
+
+**Fix:** check the real package name against the [official list](https://github.com/modelcontextprotocol/servers). If you meant the upstream, fix the spelling.`,
+  },
+  {
     id: "shell-metachars",
     title: "Shell metacharacters without a shell",
     defaultSeverity: "error",

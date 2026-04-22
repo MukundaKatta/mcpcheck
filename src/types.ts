@@ -65,6 +65,7 @@ export interface RulesConfig {
   httpWithoutAuth: RuleConfig;
   duplicateEnvKey: RuleConfig;
   shellMetachars: RuleConfig;
+  typosquatPackage: RuleConfig;
 }
 
 export interface Mcpcheckconfig {
