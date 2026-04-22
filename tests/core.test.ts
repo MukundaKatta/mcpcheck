@@ -204,6 +204,9 @@ describe("checkSource - expanded secret providers", () => {
     ["AUTH0_CLIENT_SECRET", "a".repeat(64), "Auth0 client secret"],
     ["PLANETSCALE_TOKEN", "pscale_oauth_" + "a".repeat(44), "PlanetScale API token"],
     ["SUPABASE_SERVICE_ROLE_KEY", "eyJ" + "a".repeat(18) + "." + "b".repeat(18) + "." + "c".repeat(18), "Supabase service_role / anon JWT"],
+    ["SENTRY_DSN", "https://" + "a".repeat(32) + "@o1234.ingest.sentry.io/4567", "Sentry DSN"],
+    ["ALIBABA_ACCESS_KEY_ID", "LTAI" + "a".repeat(18), "Alibaba Cloud AccessKey"],
+    ["TENCENT_SECRET_ID", "AKID" + "a".repeat(32), "Tencent Cloud SecretId"],
     // Synthetic value that matches the Discord regex (three dotted segments
     // of the right lengths) without looking like a real base64-encoded
     // snowflake id. We use uppercase placeholder runs so GitHub's secret
@@ -537,26 +540,35 @@ describe("mcp-server (spawned)", () => {
         method: "tools/call",
         params: { name: "list_rules", arguments: {} },
       });
+      send({ jsonrpc: "2.0", id: 4, method: "prompts/list" });
 
-      const lines = await awaitLines(3);
-      const initResp = JSON.parse(lines[0]!);
-      assert.equal(initResp.id, 1);
-      assert.equal(initResp.result.protocolVersion, "2024-11-05");
-      assert.ok(initResp.result.capabilities.tools, "server should advertise tools capability");
+      const lines = await awaitLines(4);
+      const byId = new Map<number, { id: number; result: Record<string, unknown> }>();
+      for (const line of lines) {
+        const parsed = JSON.parse(line) as { id: number; result: Record<string, unknown> };
+        byId.set(parsed.id, parsed);
+      }
 
-      const toolsResp = JSON.parse(lines[1]!);
-      assert.equal(toolsResp.id, 2);
-      const toolNames = (toolsResp.result.tools as { name: string }[]).map((t) => t.name);
+      const initResp = byId.get(1)!;
+      assert.equal(initResp.result["protocolVersion"], "2024-11-05");
+      assert.ok((initResp.result["capabilities"] as Record<string, unknown>)["tools"]);
+
+      const toolsResp = byId.get(2)!;
+      const toolNames = ((toolsResp.result["tools"] as { name: string }[]) ?? []).map((t) => t.name);
       assert.ok(toolNames.includes("lint_config"));
       assert.ok(toolNames.includes("explain_rule"));
       assert.ok(toolNames.includes("list_rules"));
       assert.ok(toolNames.includes("fix_config"));
 
-      const callResp = JSON.parse(lines[2]!);
-      assert.equal(callResp.id, 3);
-      const listText: string = callResp.result.content[0].text;
+      const callResp = byId.get(3)!;
+      const listText: string = ((callResp.result["content"] as { text: string }[]) ?? [])[0]!.text;
       assert.ok(listText.includes("hardcoded-secret"));
       assert.ok(listText.includes("dangerous-command"));
+
+      const promptsResp = byId.get(4)!;
+      const promptNames = ((promptsResp.result["prompts"] as { name: string }[]) ?? []).map((p) => p.name);
+      assert.ok(promptNames.includes("lint_my_config"));
+      assert.ok(promptNames.includes("audit_my_setup"));
     } finally {
       child.kill("SIGTERM");
     }

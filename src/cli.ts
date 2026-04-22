@@ -167,6 +167,14 @@ async function main(): Promise<void> {
     );
     process.exit(0);
   }
+  if (process.argv[2] === "snapshot") {
+    await handleSnapshot(process.argv.slice(3));
+    return;
+  }
+  if (process.argv[2] === "restore") {
+    await handleRestore(process.argv.slice(3));
+    return;
+  }
   if (process.argv[2] === "merge") {
     await handleMerge(process.argv.slice(3));
     return;
@@ -463,6 +471,48 @@ async function startWatch(
 function filterQuiet(report: RunReport): RunReport {
   const files: FileReport[] = report.files.filter((f) => f.issues.length > 0);
   return { ...report, files };
+}
+
+async function handleSnapshot(argv: string[]): Promise<void> {
+  if (argv.length === 0 || argv.includes("-h") || argv.includes("--help")) {
+    process.stderr.write(
+      "Usage: mcpcheck snapshot <file...>\n" +
+        "Copy each file to <file>.mcpcheck-bak. Safe-before-fix insurance.\n"
+    );
+    process.exit(argv.length === 0 ? 2 : 0);
+  }
+  const { copyFile } = await import("node:fs/promises");
+  for (const file of argv.filter((a) => !a.startsWith("-"))) {
+    const target = `${file}.mcpcheck-bak`;
+    try {
+      await copyFile(file, target);
+      process.stderr.write(pc.green(`[snapshot] ${file} → ${target}\n`));
+    } catch (err) {
+      process.stderr.write(pc.red(`[snapshot] ${file}: ${(err as Error).message}\n`));
+    }
+  }
+  process.exit(0);
+}
+
+async function handleRestore(argv: string[]): Promise<void> {
+  if (argv.length === 0 || argv.includes("-h") || argv.includes("--help")) {
+    process.stderr.write(
+      "Usage: mcpcheck restore <file...>\n" +
+        "Restore each file from <file>.mcpcheck-bak (leaves the backup in place).\n"
+    );
+    process.exit(argv.length === 0 ? 2 : 0);
+  }
+  const { copyFile } = await import("node:fs/promises");
+  for (const file of argv.filter((a) => !a.startsWith("-"))) {
+    const source = `${file}.mcpcheck-bak`;
+    try {
+      await copyFile(source, file);
+      process.stderr.write(pc.green(`[restore] ${source} → ${file}\n`));
+    } catch (err) {
+      process.stderr.write(pc.red(`[restore] ${file}: ${(err as Error).message}\n`));
+    }
+  }
+  process.exit(0);
 }
 
 async function handleMerge(argv: string[]): Promise<void> {

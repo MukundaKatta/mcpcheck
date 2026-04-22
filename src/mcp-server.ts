@@ -112,7 +112,7 @@ async function dispatch(msg: JsonRpcRequest, tools: Tool[]): Promise<unknown> {
     case "initialize":
       return {
         protocolVersion: PROTOCOL_VERSION,
-        capabilities: { tools: {} },
+        capabilities: { tools: {}, prompts: {} },
         serverInfo: { name: SERVER_NAME, version: SERVER_VERSION },
       };
     case "notifications/initialized":
@@ -134,6 +134,36 @@ async function dispatch(msg: JsonRpcRequest, tools: Tool[]): Promise<unknown> {
         throw Object.assign(new Error(`Unknown tool "${name}"`), { code: -32601 });
       }
       return tool.handler(args);
+    }
+    case "prompts/list":
+      return {
+        prompts: [
+          {
+            name: "lint_my_config",
+            description: "Lint an MCP config file and summarise issues.",
+            arguments: [
+              { name: "path", description: "Path to an MCP config", required: true },
+            ],
+          },
+          {
+            name: "fix_my_config",
+            description: "Walk through fixing every autofixable issue in an MCP config.",
+            arguments: [
+              { name: "path", description: "Path to an MCP config", required: true },
+            ],
+          },
+          {
+            name: "audit_my_setup",
+            description:
+              "Audit every installed MCP client on this machine and produce a plain-English summary.",
+            arguments: [],
+          },
+        ],
+      };
+    case "prompts/get": {
+      const name = String(params["name"] ?? "");
+      const args = (params["arguments"] ?? {}) as Record<string, unknown>;
+      return promptFor(name, args);
     }
     case "ping":
       return {};
@@ -243,6 +273,63 @@ function buildTools(): Tool[] {
       },
     },
   ];
+}
+
+/**
+ * Prompts are parameterised instruction snippets the client can hand to the
+ * model verbatim. We keep the phrasing direct ("Run the X tool on Y, then
+ * ...") so the model doesn't get creative with a config linter.
+ */
+function promptFor(name: string, args: Record<string, unknown>): unknown {
+  const path = typeof args["path"] === "string" ? args["path"] : "";
+  switch (name) {
+    case "lint_my_config":
+      return {
+        description: "Lint the named MCP config and summarise.",
+        messages: [
+          {
+            role: "user",
+            content: {
+              type: "text",
+              text:
+                `Use the lint_config tool on "${path}".\n` +
+                "For each issue, name the rule, paraphrase the message in one sentence, and mark which are autofixable. Do not invent findings — only report what lint_config returned.",
+            },
+          },
+        ],
+      };
+    case "fix_my_config":
+      return {
+        description: "Walk through every autofixable issue in an MCP config.",
+        messages: [
+          {
+            role: "user",
+            content: {
+              type: "text",
+              text:
+                `Call lint_config on "${path}" to see the findings, then for each autofixable finding, explain what the fix does.\n` +
+                `Finally, offer to call fix_config with write=true, but wait for my confirmation before doing so.`,
+            },
+          },
+        ],
+      };
+    case "audit_my_setup":
+      return {
+        description: "Audit every installed MCP client.",
+        messages: [
+          {
+            role: "user",
+            content: {
+              type: "text",
+              text:
+                "For each installed MCP client (Claude Desktop, Claude Code, Cursor, Cline, Windsurf, Zed) that I have, call lint_config on its config path and report a one-line per client summary with counts. If lint finds any hardcoded-secret or dangerous-command findings, call those out specifically.",
+            },
+          },
+        ],
+      };
+    default:
+      throw Object.assign(new Error(`Unknown prompt "${name}"`), { code: -32601 });
+  }
 }
 
 function text(s: string): ToolResult {

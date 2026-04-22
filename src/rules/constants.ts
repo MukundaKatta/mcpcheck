@@ -72,6 +72,16 @@ export const SECRET_PATTERNS: SecretPattern[] = [
     re: /^eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}$/,
     keyHint: /SUPABASE/i,
   },
+  // Sentry DSNs carry both the public and (older) secret key inline — any
+  // URL of the shape https://<key>@<org>.ingest.sentry.io/<project> is a
+  // leaked client identity even when it's "public", since it tells anyone
+  // your project id and ingest host.
+  { name: "Sentry DSN", re: /^https?:\/\/[a-f0-9]{32,}@[^\s/]+\.ingest\.sentry\.io\/\d+$/i },
+  // Alibaba Cloud AccessKey IDs are "LTAI" + 16–20 chars. Context-scoped
+  // because plain AccessKey-looking strings can appear in test data.
+  { name: "Alibaba Cloud AccessKey", re: /^LTAI[A-Za-z0-9]{16,20}$/, keyHint: /ALIBABA|ALIYUN|ALIBABACLOUD/i },
+  // Tencent Cloud SecretId starts with AKID + 32 alnum.
+  { name: "Tencent Cloud SecretId", re: /^AKID[A-Za-z0-9]{32}$/ },
   // Google Cloud service account keys are JSON blobs; people sometimes paste the
   // whole thing into a single env var value. Match on the private_key_id field,
   // which is always a 40-char hex string immediately preceded by that key name.

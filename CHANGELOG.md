@@ -8,6 +8,23 @@ uses [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **MCP server: `prompts/list` + `prompts/get`** — the recursive MCP
+  server now advertises three prompts in addition to its tools:
+  `lint_my_config`, `fix_my_config` (walks through autofixes with a
+  confirm step), and `audit_my_setup` (loops every installed client).
+  MCP clients can surface these in their slash-command / quick-action
+  menus. The spawn test now exercises initialize + tools/call +
+  prompts/list in one run (88 tests, up from 87). Capabilities
+  advertised in the initialize response include `prompts: {}` so
+  older clients that check capabilities route correctly.
+- **`mcpcheck snapshot <file...>`** and **`mcpcheck restore <file...>`**
+  — one-line safety net before `--fix` or `upgrade-pins`. Snapshot
+  copies each file to `<file>.mcpcheck-bak`; restore copies back.
+  Kept the backup after restore so you can iterate.
+- **3 more secret providers** — Sentry DSNs (URL form with inline
+  client key), Alibaba Cloud AccessKey (`LTAI…`, context-scoped to
+  ALIYUN/ALIBABA env names), Tencent Cloud SecretId (`AKID…`).
+  33 distinct prefix families.
 - **`.mcpcheckignore`** — gitignore-style file in the cwd that removes
   matching paths from the input list. Supports `#` comments, `**`
   across slashes, `*` within a segment, leading `!` to re-include,
