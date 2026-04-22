@@ -283,6 +283,7 @@ async function main(): Promise<void> {
       "--profile <name>",
       `preset severity bundle: ${listProfiles().join(", ")}`
     )
+    .option("--strict", "alias for --profile strict", false)
     .option(
       "--print-config",
       "print the effective merged mcpcheck config (defaults + profile + --config) and exit",
@@ -374,6 +375,19 @@ async function main(): Promise<void> {
     process.exit(0);
   }
 
+  // --strict is just sugar for --profile strict. Error if the user set both
+  // to conflicting values so a `mcpcheck --strict --profile permissive`
+  // doesn't silently prefer one.
+  const strictFlag = (opts as unknown as { strict?: boolean }).strict;
+  if (strictFlag) {
+    if (opts.profile && opts.profile !== "strict") {
+      process.stderr.write(
+        pc.red(`--strict and --profile "${opts.profile}" conflict. Pick one.\n`)
+      );
+      process.exit(2);
+    }
+    opts.profile = "strict";
+  }
   let config: Mcpcheckconfig;
   if (opts.profile) {
     if (!isKnownProfile(opts.profile)) {

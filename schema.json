@@ -205,6 +205,14 @@
             "enabled": true,
             "severity": "warning"
           }
+        },
+        "secretInArgs": {
+          "$ref": "#/$defs/RuleConfig",
+          "description": "Hardcoded secret in `args` — A string in `args` matches a known API-key format.",
+          "default": {
+            "enabled": true,
+            "severity": "error"
+          }
         }
       }
     },

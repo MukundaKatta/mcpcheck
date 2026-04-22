@@ -72,6 +72,7 @@ export interface RulesConfig {
   invalidEnvVarName: RuleConfig;
   emptyEnvValue: RuleConfig;
   cwdNotAbsolute: RuleConfig;
+  secretInArgs: RuleConfig;
 }
 
 export interface Mcpcheckconfig {

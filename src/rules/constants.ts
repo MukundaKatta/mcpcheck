@@ -122,6 +122,12 @@ export const SECRET_PATTERNS: SecretPattern[] = [
   // Helicone — sk-helicone- prefix. Scope to the prefix so it doesn't clash
   // with the generic OpenAI sk- family.
   { name: "Helicone API key", re: /^sk-helicone-[A-Za-z0-9_-]{20,}$/ },
+  // Airtable tokens start with `pat` + 14 alnum + `.` + 64 alnum.
+  { name: "Airtable personal access token", re: /^pat[A-Za-z0-9]{14}\.[A-Za-z0-9]{64}$/ },
+  // Vercel Blob read/write tokens: "vercel_blob_rw_" or "vercel_blob_ro_".
+  { name: "Vercel Blob token", re: /^vercel_blob_(rw|ro)_[A-Za-z0-9_-]{40,}$/ },
+  // Lambda Labs API keys — context-scoped since they're plain alnum.
+  { name: "Lambda Labs API key", re: /^secret_[A-Za-z0-9_-]{40,}$/, keyHint: /LAMBDA/i },
   // Google Cloud service account keys are JSON blobs; people sometimes paste the
   // whole thing into a single env var value. Match on the private_key_id field,
   // which is always a 40-char hex string immediately preceded by that key name.

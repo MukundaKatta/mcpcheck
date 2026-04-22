@@ -185,6 +185,16 @@ Plain-http local endpoints are handled separately by the \`invalid-url\` rule (h
 **Fix:** switch the URL scheme to https (or drop the credential header if the server really is open).`,
   },
   {
+    id: "secret-in-args",
+    title: "Hardcoded secret in `args`",
+    defaultSeverity: "error",
+    autofix: false,
+    summary: "A string in `args` matches a known API-key format.",
+    details: `\`hardcoded-secret\` only scans \`env\`. People copy invocations like \`mcp-server-foo --token sk-abc123…\` into \`args\` and commit the file; this rule catches the other half of the problem.
+
+**Fix:** move the credential into \`env\` with \`\${VAR}\` substitution. Most servers accept \`$TOKEN\` in args or read the env var directly.`,
+  },
+  {
     id: "cwd-not-absolute",
     title: "Server `cwd` is a relative path",
     defaultSeverity: "warning",

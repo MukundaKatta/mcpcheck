@@ -59,7 +59,8 @@ const DEFAULT_CONFIG = `{
     "plaintextHttpWithToken": { "enabled": true, "severity": "error"   },
     "invalidEnvVarName":     { "enabled": true,  "severity": "warning" },
     "emptyEnvValue":         { "enabled": true,  "severity": "warning" },
-    "cwdNotAbsolute":        { "enabled": true,  "severity": "warning" }
+    "cwdNotAbsolute":        { "enabled": true,  "severity": "warning" },
+    "secretInArgs":          { "enabled": true,  "severity": "error"   }
   }
 }
 `;

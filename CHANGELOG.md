@@ -8,6 +8,16 @@ uses [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **New rule: `secret-in-args`** (error) — `hardcoded-secret` only
+  scanned `env`; this rule catches the other half where users
+  paste `mcp-server-foo --token sk-abc…` into `args`. Same
+  secret-pattern set, skipping keyHint-scoped patterns since
+  there's no env-name context. 26 built-in rules.
+- **3 more providers** — Airtable personal access tokens (`pat…`),
+  Vercel Blob tokens (`vercel_blob_(rw|ro)_…`), Lambda Labs
+  (`secret_…`, context-scoped to `LAMBDA`).
+- **`--strict`** — alias for `--profile strict`. Errors cleanly if
+  combined with a conflicting `--profile`.
 - **`--color=always|never|auto`** + `--no-color` alias + respect for
   `NO_COLOR` and `FORCE_COLOR` env vars. A `color-boot.ts` shim
   imported before picocolors locks in the right mode at module-load
