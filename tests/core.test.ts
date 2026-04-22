@@ -195,6 +195,12 @@ describe("checkSource - expanded secret providers", () => {
     ["XAI_KEY", "xai-" + "a".repeat(30), "xAI (Grok) API key"],
     ["CLOUDFLARE_API_TOKEN", "a".repeat(40), "Cloudflare API token"],
     ["DATADOG_API_KEY", "a".repeat(32), "Datadog API key"],
+    ["DATABASE_URL", "postgres://user:s3cret@db.example.com/app", "PostgreSQL URI with password"],
+    ["MONGO_URL", "mongodb+srv://user:s3cret@cluster.mongodb.net/app", "MongoDB URI with password"],
+    ["FIGMA_TOKEN", "figd_" + "a".repeat(44), "Figma personal access token"],
+    ["NOTION_API_TOKEN", "secret_" + "a".repeat(43), "Notion API token"],
+    ["LINEAR_API_KEY", "lin_api_" + "a".repeat(42), "Linear API key"],
+    ["SENTRY_AUTH_TOKEN", "sntrys_" + "a".repeat(64), "Sentry auth token"],
     // Synthetic value that matches the Discord regex (three dotted segments
     // of the right lengths) without looking like a real base64-encoded
     // snowflake id. We use uppercase placeholder runs so GitHub's secret
@@ -386,6 +392,38 @@ describe("formatters (markdown, junit)", () => {
     assert.ok(xml.includes('failures="1"'));
     assert.ok(xml.includes('<failure '));
     assert.ok(xml.includes("hardcoded-secret"));
+  });
+});
+
+describe("merge + convert transforms", () => {
+  it("mergeConfigs unions server maps with later-wins", async () => {
+    const { mergeConfigs } = await import("../src/transform.js");
+    const merged = mergeConfigs(
+      { mcpServers: { a: { command: "x" }, shared: { command: "old" } } },
+      { mcpServers: { b: { command: "y" }, shared: { command: "new" } } }
+    ) as { mcpServers: Record<string, { command: string }> };
+    assert.deepEqual(Object.keys(merged.mcpServers).sort(), ["a", "b", "shared"]);
+    assert.equal(merged.mcpServers["shared"]!.command, "new");
+  });
+
+  it("mergeConfigs collapses overlapping server-map keys into mcpServers", async () => {
+    const { mergeConfigs } = await import("../src/transform.js");
+    const merged = mergeConfigs(
+      { mcpServers: { a: { command: "x" } } },
+      { context_servers: { b: { command: "y" } } }
+    ) as { mcpServers: Record<string, unknown>; context_servers?: unknown };
+    assert.deepEqual(Object.keys(merged.mcpServers).sort(), ["a", "b"]);
+    assert.equal(merged.context_servers, undefined);
+  });
+
+  it("convertConfig rewrites the top-level server key", async () => {
+    const { convertConfig } = await import("../src/transform.js");
+    const zed = convertConfig(
+      { mcpServers: { a: { command: "x" } } },
+      "zed"
+    ) as { context_servers: Record<string, unknown>; mcpServers?: unknown };
+    assert.deepEqual(Object.keys(zed.context_servers), ["a"]);
+    assert.equal(zed.mcpServers, undefined);
   });
 });
 

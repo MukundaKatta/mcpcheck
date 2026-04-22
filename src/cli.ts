@@ -41,6 +41,13 @@ import { upgradePins } from "./upgrade-pins.js";
 import { pathsForClient, knownClients } from "./cli-metadata.js";
 import { completionFor, isKnownShell, listShells } from "./completions.js";
 import { applyProfile, isKnownProfile, listProfiles } from "./profiles.js";
+import {
+  convertConfig,
+  isKnownConvertTarget,
+  listConvertTargets,
+  mergeConfigs,
+  readJsoncFile,
+} from "./transform.js";
 import type { Mcpcheckconfig, Rule, RunReport, FileReport } from "./types.js";
 
 type Format = "text" | "json" | "sarif" | "github" | "markdown" | "junit";
@@ -59,6 +66,7 @@ interface CliOptions {
   baselineWrite?: boolean;
   watch: boolean;
   profile?: string;
+  printConfig: boolean;
 }
 
 const DEFAULT_BASELINE_PATH = ".mcpcheck.baseline.json";
@@ -128,6 +136,14 @@ async function main(): Promise<void> {
     await handleUpgradePins(process.argv.slice(3));
     return;
   }
+  if (process.argv[2] === "merge") {
+    await handleMerge(process.argv.slice(3));
+    return;
+  }
+  if (process.argv[2] === "convert") {
+    await handleConvert(process.argv.slice(3));
+    return;
+  }
   if (process.argv[2] === "completions") {
     const shell = process.argv[3];
     if (!shell || shell === "-h" || shell === "--help") {
@@ -180,6 +196,11 @@ async function main(): Promise<void> {
     .option(
       "--profile <name>",
       `preset severity bundle: ${listProfiles().join(", ")}`
+    )
+    .option(
+      "--print-config",
+      "print the effective merged mcpcheck config (defaults + profile + --config) and exit",
+      false
     )
     .version(readVersion(), "-v, --version")
     .addHelpText(
@@ -256,6 +277,11 @@ async function main(): Promise<void> {
   } else {
     config = opts.config ? loadConfigFileSafe(opts.config) : mergeConfig();
   }
+  if (opts.printConfig) {
+    process.stdout.write(JSON.stringify(config, null, 2) + "\n");
+    process.exit(0);
+  }
+
   const extraRules = await loadPluginRules(config);
 
   const files = await expandInputs(rawInputs);
@@ -396,6 +422,91 @@ async function startWatch(
 function filterQuiet(report: RunReport): RunReport {
   const files: FileReport[] = report.files.filter((f) => f.issues.length > 0);
   return { ...report, files };
+}
+
+async function handleMerge(argv: string[]): Promise<void> {
+  const output = extractArg(argv, "--output") ?? extractArg(argv, "-o");
+  const files = positionalArgs(argv, ["--output", "-o"]);
+  if (files.length < 2 || argv.includes("-h") || argv.includes("--help")) {
+    process.stderr.write(
+      "Usage: mcpcheck merge <a.json> <b.json> [<c.json> ...] [--output path]\n" +
+        "Union two or more MCP configs. Server maps are unioned with later-wins\n" +
+        "precedence. Writes to stdout unless --output is given.\n"
+    );
+    process.exit(files.length < 2 ? 2 : 0);
+  }
+  let merged: unknown = await readJsoncFile(files[0]!);
+  for (const f of files.slice(1)) {
+    const next = await readJsoncFile(f);
+    merged = mergeConfigs(merged, next);
+  }
+  const out = JSON.stringify(merged, null, 2) + "\n";
+  if (output) {
+    const { writeFile } = await import("node:fs/promises");
+    await writeFile(output, out, "utf8");
+    process.stderr.write(pc.green(`[merge] wrote ${output}\n`));
+  } else {
+    process.stdout.write(out);
+  }
+  process.exit(0);
+}
+
+async function handleConvert(argv: string[]): Promise<void> {
+  const target = extractArg(argv, "--to");
+  const output = extractArg(argv, "--output") ?? extractArg(argv, "-o");
+  const files = positionalArgs(argv, ["--to", "--output", "-o"]);
+  if (!target || files.length !== 1 || argv.includes("-h") || argv.includes("--help")) {
+    process.stderr.write(
+      "Usage: mcpcheck convert <file.json> --to <client> [--output path]\n" +
+        `Targets: ${listConvertTargets().join(", ")}\n` +
+        "Rewrites the top-level server key (mcpServers / servers / context_servers)\n" +
+        "to match the target client.\n"
+    );
+    process.exit(!target || files.length !== 1 ? 2 : 0);
+  }
+  if (!isKnownConvertTarget(target)) {
+    process.stderr.write(
+      pc.red(`Unknown convert target "${target}". Known: ${listConvertTargets().join(", ")}.\n`)
+    );
+    process.exit(2);
+  }
+  const parsed = await readJsoncFile(files[0]!);
+  const converted = convertConfig(parsed, target);
+  const out = JSON.stringify(converted, null, 2) + "\n";
+  if (output) {
+    const { writeFile } = await import("node:fs/promises");
+    await writeFile(output, out, "utf8");
+    process.stderr.write(pc.green(`[convert] wrote ${output}\n`));
+  } else {
+    process.stdout.write(out);
+  }
+  process.exit(0);
+}
+
+function extractArg(argv: string[], flag: string): string | undefined {
+  const idx = argv.indexOf(flag);
+  if (idx < 0) return undefined;
+  return argv[idx + 1];
+}
+
+/**
+ * Filter argv down to positional args, skipping both the listed value-taking
+ * flags AND their values. "Positional" here excludes anything beginning with
+ * `-` and anything that immediately follows a value-taking flag.
+ */
+function positionalArgs(argv: string[], valueFlags: string[]): string[] {
+  const flagSet = new Set(valueFlags);
+  const out: string[] = [];
+  for (let i = 0; i < argv.length; i += 1) {
+    const a = argv[i]!;
+    if (flagSet.has(a)) {
+      i += 1; // skip the value
+      continue;
+    }
+    if (a.startsWith("-")) continue;
+    out.push(a);
+  }
+  return out;
 }
 
 async function handleUpgradePins(argv: string[]): Promise<void> {

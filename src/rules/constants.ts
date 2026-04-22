@@ -53,6 +53,16 @@ export const SECRET_PATTERNS: SecretPattern[] = [
   { name: "Cloudflare API token", re: /^[A-Za-z0-9_-]{40}$/, keyHint: /CLOUDFLARE|CF[_-]?API|CF[_-]?TOKEN/i },
   { name: "Datadog API key", re: /^[a-f0-9]{32}$/i, keyHint: /DATADOG|\bDD[_-]?API|\bDD[_-]?KEY/i },
   { name: "Discord bot token", re: /^[A-Za-z0-9_-]{23,28}\.[A-Za-z0-9_-]{6,7}\.[A-Za-z0-9_-]{27,}$/ },
+  // DB URIs with an embedded password. We match only when the URL is
+  // postgres://user:password@host/... or mongodb://user:password@host/...
+  // — the presence of `:<password>@` is the signal that the connection
+  // string is carrying a credential rather than being a harmless URL.
+  { name: "PostgreSQL URI with password", re: /^postgres(?:ql)?:\/\/[^:@\s]+:[^@\s]+@[^\s]+$/ },
+  { name: "MongoDB URI with password", re: /^mongodb(?:\+srv)?:\/\/[^:@\s]+:[^@\s]+@[^\s]+$/ },
+  { name: "Figma personal access token", re: /^figd_[A-Za-z0-9_-]{40,}$/ },
+  { name: "Notion API token", re: /^secret_[A-Za-z0-9]{43}$/ },
+  { name: "Linear API key", re: /^lin_api_[A-Za-z0-9]{40,}$/ },
+  { name: "Sentry auth token", re: /^sntrys_[A-Za-z0-9_-]{60,}$/ },
   // Google Cloud service account keys are JSON blobs; people sometimes paste the
   // whole thing into a single env var value. Match on the private_key_id field,
   // which is always a 40-char hex string immediately preceded by that key name.

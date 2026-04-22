@@ -8,6 +8,26 @@ uses [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **`mcpcheck merge <a.json> <b.json> [...]`** — union two or more
+  MCP configs. Server maps combine; on name collisions, later files
+  win. If inputs use different server-map keys (`mcpServers` vs
+  `context_servers`), the merged output collapses them under the
+  canonical `mcpServers` key so the result is a valid single config.
+  `--output <path>` writes to disk, else stdout.
+- **`mcpcheck convert <file.json> --to <client>`** — rewrite the
+  top-level server key to match a client's convention. Targets:
+  `claude-desktop`, `claude-code`, `cursor`, `cline`, `windsurf`,
+  `zed` (uses `context_servers`), `generic` (uses `servers`). Unrelated
+  top-level keys are preserved, so `zed/settings.json`-style
+  configs convert cleanly.
+- **`mcpcheck --print-config`** — dumps the effective merged config
+  (defaults + `--profile` + `--config`) to stdout and exits. Useful
+  for debugging why a rule is firing at an unexpected severity.
+- **6 more secret providers** — PostgreSQL / MongoDB URIs with
+  embedded `user:password@host` credentials, Figma personal access
+  tokens (`figd_…`), Notion integration tokens (`secret_…43`), Linear
+  API keys (`lin_api_…`), and Sentry auth tokens (`sntrys_…`). 30
+  provider families now.
 - **`mcpcheck --profile <strict|permissive|ci>`** — opinionated
   severity bundles on top of the defaults. `strict` escalates hygiene
   rules to error, `permissive` drops them to info (security-critical
