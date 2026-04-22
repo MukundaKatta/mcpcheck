@@ -6,6 +6,12 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.1.0] — 2026-04-22
+
+### Summary
+
+mcpcheck v1.1.0 is the first post-initial-scaffold release. It grows from 13 built-in rules to **33**, from 9 secret-provider families to **50+**, adds a VS Code extension with live diagnostics / Quick Fix / hover / CodeLens, an LSP server for every other editor, an MCP-server mode so the model itself can lint configs, a browser playground, a Docker image, a policy-as-code plugin, a rule-plugin starter, and ~15 new CLI subcommands (`init`, `diff`, `stats`, `doctor`, `upgrade-pins`, `merge`, `convert`, `fmt`, `graph`, `list-servers`, `audit`, `score`, `scan-env`, `pipe`, `snapshot`, `restore`, `scaffold-workflow`, `completions`, `mcp-server`, `lsp`, `version`, `why`). Full list below; see [docs/RULES.md](docs/RULES.md) for per-rule documentation.
+
 ### Added
 
 - **New rule: `autoapprove-wildcard`** (error) — `autoApprove: ["*"]`

@@ -2,7 +2,7 @@
 
 All notable changes to the mcpcheck VS Code extension.
 
-## [0.1.0] — Unreleased
+## [0.1.0] — 2026-04-22
 
 ### Added
 
