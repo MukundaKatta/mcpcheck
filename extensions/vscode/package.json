@@ -1,0 +1,93 @@
+{
+  "name": "mcpcheck-vscode",
+  "displayName": "mcpcheck — MCP config linter",
+  "description": "Inline linting for MCP (Model Context Protocol) config files in Claude Desktop, Claude Code, Cursor, Cline, Windsurf, and Zed. Catches hardcoded secrets, missing transport, unpinned images, and dangerous commands as you type.",
+  "version": "0.1.0",
+  "publisher": "MukundaKatta",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Linters"
+  ],
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "claude",
+    "cursor",
+    "cline",
+    "windsurf",
+    "zed",
+    "linter",
+    "security"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MukundaKatta/mcpcheck.git",
+    "directory": "extensions/vscode"
+  },
+  "bugs": {
+    "url": "https://github.com/MukundaKatta/mcpcheck/issues"
+  },
+  "homepage": "https://github.com/MukundaKatta/mcpcheck/tree/main/extensions/vscode#readme",
+  "main": "./out/extension.cjs",
+  "activationEvents": [
+    "onLanguage:json",
+    "onLanguage:jsonc"
+  ],
+  "contributes": {
+    "commands": [
+      { "command": "mcpcheck.lint", "title": "mcpcheck: Lint active file" },
+      { "command": "mcpcheck.fixAll", "title": "mcpcheck: Fix all autofixable issues in active file" },
+      { "command": "mcpcheck.explainRule", "title": "mcpcheck: Explain rule..." }
+    ],
+    "configuration": {
+      "title": "mcpcheck",
+      "properties": {
+        "mcpcheck.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable mcpcheck diagnostics."
+        },
+        "mcpcheck.filePatterns": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [
+            "**/mcp.json",
+            "**/.mcp.json",
+            "**/claude_desktop_config.json",
+            "**/cline_mcp_settings.json",
+            "**/.cursor/mcp.json",
+            "**/.claude/mcp.json",
+            "**/.claude.json",
+            "**/.codeium/windsurf/mcp_config.json"
+          ],
+          "description": "Glob patterns for files to lint. Files that do not match any pattern are ignored even if the extension is enabled."
+        },
+        "mcpcheck.runOn": {
+          "type": "string",
+          "enum": ["onType", "onSave"],
+          "default": "onType",
+          "description": "When to re-run mcpcheck. \"onType\" updates diagnostics as you edit (debounced); \"onSave\" only updates when the file is saved."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "build": "node esbuild.mjs",
+    "watch": "node esbuild.mjs --watch",
+    "lint": "tsc --noEmit",
+    "package": "npm run build && npx --yes @vscode/vsce@^3 package --no-dependencies"
+  },
+  "dependencies": {
+    "mcpcheck": "file:../.."
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/vscode": "^1.85.0",
+    "esbuild": "^0.24.0",
+    "typescript": "^5.7.2"
+  }
+}

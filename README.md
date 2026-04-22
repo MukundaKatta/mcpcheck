@@ -7,9 +7,11 @@
 A linter for **MCP (Model Context Protocol)** config files. Works on every client that reads `mcp.json` / `.mcp.json` / `claude_desktop_config.json` / Zed's `context_servers`: Claude Desktop, Claude Code, Cursor, Cline, Windsurf, Zed.
 
 - **CLI** — `mcpcheck` auto-discovers configs for each client or lints anything you glob at it.
+- **VS Code extension** — inline diagnostics and Quick Fixes while you edit your MCP config. See [extensions/vscode/](./extensions/vscode).
 - **GitHub Action** — inline PR annotations + SARIF for Code Scanning.
 - **Autofix** — replaces hardcoded secrets with `${VAR}` interpolation.
-- **Secret detection** — OpenAI, Anthropic, GitHub, Slack, AWS, Stripe, Google AI, and context-scoped Azure OpenAI keys.
+- **Secret detection** — OpenAI, Anthropic, GitHub, GitLab, Slack, AWS, Stripe, Twilio, SendGrid, Hugging Face, npm, Google AI, Google Cloud service JSON, and context-scoped Azure OpenAI keys.
+- **Dangerous-command detection** — `sudo`, `curl | sh`, docker `--privileged`, host-root mounts, `--unsafe-perm`.
 - **JSONC-tolerant** — comments and trailing commas are accepted, matching what Claude Desktop and Cursor actually parse.
 - **Programmatic API** — compose rules into your own pipeline.
 

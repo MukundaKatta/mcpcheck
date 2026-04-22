@@ -83,3 +83,60 @@ jobs:
             echo "Expected init to exit 1 on existing files without --force"
             exit 1
           fi
+
+  vscode-extension:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    defaults:
+      run:
+        working-directory: extensions/vscode
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install root + build mcpcheck (extension depends on file:../..)
+        working-directory: .
+        run: |
+          npm install --no-audit --no-fund
+          npm run build
+
+      - name: Install extension deps
+        run: npm install --no-audit --no-fund
+
+      - name: Type-check
+        run: npm run lint
+
+      - name: Build extension bundle
+        run: npm run build
+
+      - name: Smoke-load the bundle
+        run: |
+          node -e "
+          const Module = require('module');
+          const orig = Module.prototype.require;
+          Module.prototype.require = function(p) {
+            if (p === 'vscode') return {};
+            return orig.apply(this, arguments);
+          };
+          const mod = require('./out/extension.cjs');
+          if (typeof mod.activate !== 'function') {
+            console.error('activate not exported');
+            process.exit(1);
+          }
+          if (typeof mod.deactivate !== 'function') {
+            console.error('deactivate not exported');
+            process.exit(1);
+          }
+          "
+
+      - name: Package VSIX
+        run: npx --yes @vscode/vsce@^3 package --no-dependencies --no-git-tag-version
+
+      - name: Upload VSIX artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mcpcheck-vscode-vsix
+          path: extensions/vscode/*.vsix
+          if-no-files-found: error

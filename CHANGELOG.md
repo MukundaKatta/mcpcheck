@@ -8,6 +8,19 @@ uses [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **VS Code extension** — `extensions/vscode/` ships `mcpcheck-vscode`, a
+  self-contained extension that runs the same rules inline while you edit
+  MCP configs. Provides a Quick Fix for hardcoded secrets, a
+  `mcpcheck: Fix all` command, and a `mcpcheck: Explain rule...` command
+  that opens the rule docs in a Markdown preview. Diagnostics link
+  directly to per-rule documentation via the rule-id code link.
+  mcpcheck is bundled into the extension via esbuild; no external CLI
+  install required.
+- **Public API additions for embedders** — `locate`, `parseJsonc`,
+  `stripJsonc`, `explainRule`, `listRuleIds`, and `RULE_DOCS` are now
+  exported from the package root so downstream tools (including the VS
+  Code extension) can render diagnostics with precise byte offsets and
+  self-documenting rule metadata.
 - **`mcpcheck init`** — scaffold `mcpcheck.config.json` (with every rule
   spelled out at its default) and `.github/workflows/mcpcheck.yml` (runs
   mcpcheck on every PR, uploads SARIF to Code Scanning). `--config-only`,
