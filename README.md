@@ -37,13 +37,13 @@ Checked 1 file(s) in 3ms: 1 error, 1 warning.
 ## Install
 
 ```bash
-npm install -g mcpcheck
+npm install -g @mukundakatta/mcpcheck
 ```
 
 Or one-off:
 
 ```bash
-npx mcpcheck
+npx @mukundakatta/mcpcheck
 ```
 
 Or build from source:

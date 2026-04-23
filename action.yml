@@ -22,7 +22,7 @@ inputs:
     default: mcpcheck.sarif
     required: false
   version:
-    description: mcpcheck npm version to install (default latest).
+    description: npm version of @mukundakatta/mcpcheck to install (default latest).
     default: latest
     required: false
 outputs:
@@ -37,7 +37,7 @@ runs:
   steps:
     - name: Install mcpcheck
       shell: bash
-      run: npm install -g mcpcheck@${{ inputs.version }}
+      run: npm install -g @mukundakatta/mcpcheck@${{ inputs.version }}
     - name: Run mcpcheck (annotations)
       shell: bash
       run: |
